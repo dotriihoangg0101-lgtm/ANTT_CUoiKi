@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Đăng ký Tài khoản Developer - HUTECH ATTT{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="card card-cyber">
+            <div class="card-cyber-header text-center py-3">
+                <h5 class="mb-1 text-info"><i class="bi bi-person-plus-fill me-2"></i>Đăng ký Developer</h5>
+                <small class="text-secondary">Mật khẩu tự động băm bằng <strong>Argon2id (m=32MB, t=2, p=2)</strong></small>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Username (tối thiểu 3 ký tự)</label>
+                        <input type="text" name="username" class="form-control form-control-cyber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Email</label>
+                        <input type="email" name="email" class="form-control form-control-cyber" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Mật khẩu (tối thiểu 8 ký tự)</label>
+                        <input type="password" name="password" class="form-control form-control-cyber" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-semibold">
+                        <i class="bi bi-check2-circle me-1"></i>Tạo tài khoản an toàn
+                    </button>
+                </form>
+                <div class="text-center mt-3 small">
+                    <a href="{{ url_for('auth.login') }}" class="text-info text-decoration-none">Quay lại trang Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

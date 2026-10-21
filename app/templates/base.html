@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Secure API Key Manager - HUTECH ATTT{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-cyber sticky-top mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('dashboard.index') }}">
+                <span class="badge bg-info text-dark"><i class="bi bi-shield-lock-fill"></i> SEC-GATEWAY</span>
+                <span>Quản lý & Kiểm soát API Key An toàn</span>
+            </a>
+            {% if current_user.is_authenticated %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3 gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active fw-semibold text-info{% endif %}"
+                           href="{{ url_for('dashboard.index') }}">
+                            <i class="bi bi-key-fill me-1"></i>Quản lý API Key
+                        </a>
+                    </li>
+                    {% if demo_mode %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard.playground' %}active fw-semibold text-warning{% endif %}"
+                           href="{{ url_for('dashboard.playground') }}">
+                            <i class="bi bi-terminal-plus me-1"></i>8 Ngữ cảnh Demo & Tấn công
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if demo_mode and current_user.is_authenticated and current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard.db_inspector' %}active fw-semibold text-success{% endif %}"
+                           href="{{ url_for('dashboard.db_inspector') }}">
+                            <i class="bi bi-database-fill-check me-1"></i>Soi Database (Hashes)
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'dashboard.logs' %}active fw-semibold text-light{% endif %}"
+                           href="{{ url_for('dashboard.logs') }}">
+                            <i class="bi bi-journal-code me-1"></i>Audit & Usage Logs
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <div class="d-flex align-items-center gap-2">
+                    {% if demo_mode and current_user.is_authenticated and current_user.is_admin %}
+                    <form method="POST" action="{{ url_for('dashboard.reset_demo') }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-warning"
+                                title="Khôi phục lại toàn bộ 8 kịch bản mẫu về trạng thái ban đầu">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset 8 Kịch bản Demo
+                        </button>
+                    </form>
+                    {% endif %}
+                    <span class="badge bg-secondary py-2 px-3">
+                        <i class="bi bi-person-check-fill me-1"></i>{{ current_user.username }}
+                        <span class="text-info">({{ current_user.role|upper }})</span>
+                    </span>
+                    <form method="POST" action="{{ url_for('auth.logout') }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container-fluid px-4 pb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

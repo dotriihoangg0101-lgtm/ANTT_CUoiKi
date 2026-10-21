@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập - Hệ thống Quản lý API Key An toàn{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5 col-lg-4">
+        <div class="card card-cyber">
+            <div class="card-cyber-header text-center py-3">
+                <h5 class="mb-1 text-info"><i class="bi bi-shield-lock-fill me-2"></i>Xác thực Quản trị viên</h5>
+                <small class="text-secondary">Mật khẩu được bảo vệ bằng thuật toán <strong>Argon2id</strong></small>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Tên đăng nhập</label>
+                        <input type="text" name="username" class="form-control form-control-cyber" value="{% if config.DEMO_MODE %}admin{% endif %}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary">Mật khẩu</label>
+                        <input type="password" name="password" class="form-control form-control-cyber" value="{% if config.DEMO_MODE %}{{ config.DEMO_ADMIN_PASSWORD or '' }}{% endif %}" required>
+                    </div>
+                    <button type="submit" class="btn btn-info w-100 fw-semibold text-dark">
+                        <i class="bi bi-unlock-fill me-1"></i>Đăng nhập Hệ thống
+                    </button>
+                </form>
+
+                {% if config.DEMO_MODE %}
+                <hr class="border-secondary my-4">
+
+                <div class="small text-secondary mb-2 text-center">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                    <strong>Đăng nhập nhanh 1-Click (Dành cho Demo Đồ án):</strong>
+                </div>
+                <div class="d-grid gap-2">
+                    <form method="POST" action="{{ url_for('auth.quick_login', username='admin') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-info w-100">
+                            <i class="bi bi-person-badge-fill me-1"></i>Vào ngay tài khoản <strong>admin</strong>
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('auth.quick_login', username='dev_hoang') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-light w-100">
+                            <i class="bi bi-code-slash me-1"></i>Vào ngay tài khoản <strong>dev_hoang</strong>
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <div class="text-center mt-3 small">
+                    <a href="{{ url_for('auth.register') }}" class="text-info text-decoration-none">
+                        Chưa có tài khoản? Đăng ký Developer mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

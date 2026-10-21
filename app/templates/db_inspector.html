@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Soi Trực Tiếp Bảng Database (Argon2id, HMAC-SHA256, Fernet) - HUTECH ATTT{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h4 class="mb-0 text-success fw-bold">
+            <i class="bi bi-database-fill-check me-2"></i>Trình Kiểm Tra Dữ Liệu Thô Trong Database (Database Cryptographic Inspector)
+        </h4>
+        <small class="text-secondary">
+            Chứng minh trực tiếp trước Hội đồng chấm đồ án: <strong>Tuyệt đối không lưu lộ Plaintext Password hay Plaintext API Key trong CSDL!</strong>
+        </small>
+    </div>
+    <span class="badge bg-dark border border-success text-success py-2 px-3 code-mono">
+        Engine: SQLAlchemy ORM (SQLite / MySQL Ready)
+    </span>
+</div>
+
+<!-- 1. Bảng api_keys -->
+<div class="card card-cyber mb-4">
+    <div class="card-cyber-header text-info d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-key-fill me-2"></i>Bảng 1: <code>api_keys</code> — Lưu trữ bằng HMAC-SHA256(raw_key, SERVER_PEPPER) & Mã hóa Fernet</span>
+        <span class="badge bg-info text-dark">{{ api_keys|length }} bản ghi</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-cyber table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>key_prefix (Index O(1))</th>
+                    <th>key_hash (HMAC-SHA256 + Pepper - 64 Hex)</th>
+                    <th>signing_secret_enc (Fernet AES-128-CBC)</th>
+                    <th>status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in api_keys %}
+                <tr>
+                    <td class="code-mono">{{ k.id }}</td>
+                    <td class="fw-semibold">{{ k.name }}</td>
+                    <td><code class="text-warning">{{ k.key_prefix }}</code></td>
+                    <td><div class="hash-box">{{ k.key_hash }}</div></td>
+                    <td><div class="hash-box text-secondary">{{ k.signing_secret_enc[:48] }}...</div></td>
+                    <td>
+                        <span class="badge {% if k.status_label == 'ACTIVE' %}bg-success{% elif k.status_label == 'GRACE_PERIOD' %}bg-info text-dark{% else %}bg-danger{% endif %}">
+                            {{ k.status_label }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 2. Bảng users -->
+<div class="card card-cyber mb-4">
+    <div class="card-cyber-header text-warning d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-people-fill me-2"></i>Bảng 2: <code>users</code> — Mật khẩu băm bằng chuẩn <code>Argon2id (m=32768, t=2, p=2)</code></span>
+        <span class="badge bg-warning text-dark">{{ users|length }} bản ghi</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-cyber table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>username</th>
+                    <th>email</th>
+                    <th>role</th>
+                    <th>password_hash (Argon2id Salted Hash)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td class="code-mono">{{ u.id }}</td>
+                    <td class="fw-bold text-info">{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td><span class="badge bg-secondary">{{ u.role }}</span></td>
+                    <td><div class="hash-box text-warning">{{ u.password_hash }}</div></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 3. Bảng vault_records -->
+<div class="card card-cyber">
+    <div class="card-cyber-header text-success d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-safe2-fill me-2"></i>Bảng 3: <code>vault_records</code> — Hồ sơ Nghiệp vụ Mẫu (Cột <code>encrypted_secret_note</code> mã hóa bằng Fernet)</span>
+        <span class="badge bg-success">{{ vault_records|length }} bản ghi</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-cyber table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>id</th>
+                    <th>customer_code</th>
+                    <th>full_name</th>
+                    <th>balance (VNĐ)</th>
+                    <th>encrypted_secret_note (Bản mã Fernet lưu trên đĩa)</th>
+                    <th>Giải mã khi gọi qua API hợp lệ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in vault_records %}
+                <tr>
+                    <td class="code-mono">{{ r.id }}</td>
+                    <td><code class="text-info">{{ r.customer_code }}</code></td>
+                    <td class="fw-semibold">{{ r.full_name }}</td>
+                    <td class="code-mono text-warning">{{ "{:,.0f}".format(r.balance) }}</td>
+                    <td><div class="hash-box text-secondary">{{ r.encrypted_secret_note[:52] }}...</div></td>
+                    <td class="small text-success">{{ r.get_secret_note() }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Quản lý API Key An toàn - HUTECH ATTT{% endblock %}
+
+{% block content %}
+{% if show_once_data %}
+<div class="show-once-banner mb-4 shadow">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+            <span class="badge bg-success me-2">SHOW-ONCE SECRET PATTERN</span>
+            <strong class="text-white fs-5">
+                {% if show_once_data.action == 'ROTATED' %}
+                    Đã xoay vòng (Rotate) sang API Key mới: {{ show_once_data.name }}
+                {% else %}
+                    Đã cấp phát API Key mới: {{ show_once_data.name }}
+                {% endif %}
+            </strong>
+        </div>
+        <span class="badge bg-warning text-dark">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            Chỉ hiển thị ĐÚNG 1 LẦN DUY NHẤT! Khi tải lại trang, Key gốc sẽ biến mất vĩnh viễn.
+        </span>
+    </div>
+
+    {% if show_once_data.action == 'ROTATED' %}
+    <div class="alert alert-info py-2 small mb-3">
+        <i class="bi bi-arrow-repeat me-1"></i>
+        <strong>Zero-Downtime Key Rotation:</strong> Key cũ <code>{{ show_once_data.old_prefix }}</code> vẫn được phép hoạt động song song trong thời gian ân hạn (Grace Period) đến <strong>{{ show_once_data.grace_until }}</strong> để hệ thống Client kịp cập nhật mà không bị gián đoạn dịch vụ!
+    </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="small text-info fw-semibold mb-1">1. Plaintext API Key (Gửi trong Header <code>X-API-Key</code> - Copy ngay):</label>
+            <div class="input-group">
+                <input type="text" id="newRawKeyInput" class="form-control form-control-cyber code-mono text-warning fw-bold"
+                       value="{{ show_once_data.raw_key }}" readonly>
+                <button class="btn btn-info text-dark fw-semibold" type="button" onclick="copyText('newRawKeyInput')">
+                    <i class="bi bi-clipboard-check"></i> Copy Key
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="small text-info fw-semibold mb-1">2. HMAC Signing Secret (Dùng ký gói tin chống Replay Attack):</label>
+            <div class="input-group">
+                <input type="text" id="newSigningSecretInput" class="form-control form-control-cyber code-mono text-light"
+                       value="{{ show_once_data.signing_secret }}" readonly>
+                <button class="btn btn-outline-info" type="button" onclick="copyText('newSigningSecretInput')">
+                    <i class="bi bi-clipboard"></i> Copy Secret
+                </button>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="small text-secondary">
+                <i class="bi bi-database-lock me-1 text-success"></i>
+                <strong>Mã băm một chiều lưu trong Database (<code>HMAC-SHA256(raw_key, SERVER_PEPPER)</code>):</strong>
+                <code class="text-info ms-1">{{ show_once_data.key_hash }}</code>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Thống kê tổng quan -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2 col-6">
+        <div class="stat-card">
+            <div class="text-secondary small">Tổng số API Keys</div>
+            <div class="fs-3 fw-bold text-white">{{ stats.total_keys }}</div>
+            <div class="small text-info"><i class="bi bi-key me-1"></i>HMAC-SHA256</div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6">
+        <div class="stat-card">
+            <div class="text-secondary small">Đang hoạt động</div>
+            <div class="fs-3 fw-bold text-success">{{ stats.active_keys }}</div>
+            <div class="small text-secondary">Active & Grace Period</div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6">
+        <div class="stat-card">
+            <div class="text-secondary small">Đã khóa / Thu hồi</div>
+            <div class="fs-3 fw-bold text-danger">{{ stats.frozen_or_revoked }}</div>
+            <div class="small text-secondary">Revoked & Auto-Frozen</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="stat-card">
+            <div class="text-secondary small">Tổng lượt gọi API</div>
+            <div class="fs-3 fw-bold text-info">{{ stats.total_requests }}</div>
+            <div class="small text-secondary">Qua Middleware 6 lớp</div>
+        </div>
+    </div>
+    <div class="col-md-3 col-12">
+        <div class="stat-card">
+            <div class="text-secondary small">Cuộc tấn công / Vi phạm bị chặn</div>
+            <div class="fs-3 fw-bold text-warning">{{ stats.blocked_attacks }}</div>
+            <div class="small text-danger"><i class="bi bi-shield-exclamation me-1"></i>Tự động khóa sau 5 lần sai</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Form cấp phát API Key mới -->
+    <div class="col-lg-7">
+        <div class="card card-cyber h-100">
+            <div class="card-cyber-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-plus-circle-fill text-info me-2"></i>Cấp phát API Key An toàn Mới (CSPRNG + HMAC-SHA256)</span>
+                <span class="badge bg-dark border border-secondary text-secondary">Show-Once Pattern</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('dashboard.create_key') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Tên gợi nhớ dịch vụ / ứng dụng</label>
+                            <input type="text" name="name" class="form-control form-control-cyber"
+                                   placeholder="VD: Mobile Banking Service" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-secondary">Môi trường</label>
+                            <select name="environment" class="form-select form-select-cyber">
+                                <option value="live">Production (ak_live_)</option>
+                                <option value="test">Sandbox (ak_test_)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-secondary">Thời hạn (TTL)</label>
+                            <select name="expires_in_days" class="form-select form-select-cyber">
+                                <option value="30">30 ngày</option>
+                                <option value="7">7 ngày</option>
+                                <option value="90">90 ngày</option>
+                                <option value="365">1 năm</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">
+                                IP Whitelisting / CIDR <span class="text-muted">(Để trống = Cho phép mọi IP)</span>
+                            </label>
+                            <input type="text" name="allowed_ips" class="form-control form-control-cyber code-mono"
+                                   placeholder="VD: 127.0.0.1, 10.10.0.0/16">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-secondary">Giới hạn lưu lượng (Rate Limit / Phút)</label>
+                            <input type="number" name="rate_limit_per_minute" class="form-control form-control-cyber"
+                                   value="60" min="1" max="5000" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small text-secondary d-block mb-1">
+                                Phân quyền Đặc quyền Tối thiểu (Scopes - Least Privilege):
+                            </label>
+                            <div class="row g-2">
+                                {% for scope_code, scope_desc in available_scopes %}
+                                {% if current_user.is_admin or scope_code in ('read:records', 'write:records') %}
+                                <div class="col-md-6">
+                                    <div class="form-check p-2 rounded border border-secondary bg-dark bg-opacity-50">
+                                        <input class="form-check-input ms-1" type="checkbox" name="scopes"
+                                               value="{{ scope_code }}" id="scope_{{ loop.index }}"
+                                               {% if scope_code == 'read:records' %}checked{% endif %}>
+                                        <label class="form-check-label ms-2 small" for="scope_{{ loop.index }}">
+                                            <code class="text-info">{{ scope_code }}</code>
+                                            <div class="text-secondary" style="font-size: 0.75rem;">{{ scope_desc }}</div>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-info text-dark fw-semibold px-4">
+                                <i class="bi bi-key-fill me-1"></i>Sinh Khóa & Băm HMAC-SHA256
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nhật ký kiểm toán bảo mật gần nhất -->
+    <div class="col-lg-5">
+        <div class="card card-cyber h-100">
+            <div class="card-cyber-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shield-check text-warning me-2"></i>Sự kiện Kiểm toán Bảo mật Mới nhất</span>
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                <a href="{{ url_for('dashboard.logs') }}" class="btn btn-sm btn-outline-secondary py-0">Xem tất cả</a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for audit in recent_audits %}
+                    <div class="list-group-item bg-transparent border-secondary py-2 px-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge {% if audit.severity == 'CRITICAL' %}bg-danger{% elif audit.severity == 'WARNING' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                                {{ audit.event_type }}
+                            </span>
+                            <small class="text-secondary code-mono">{{ audit.created_at.strftime('%H:%M:%S') }}</small>
+                        </div>
+                        <div class="small text-light mt-1">{{ audit.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danh sách toàn bộ API Keys trong Database -->
+<div class="card card-cyber">
+    <div class="card-cyber-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><i class="bi bi-table me-2 text-info"></i>Danh sách API Key & Kiểm soát Vòng đời (Lifecycle Control)</span>
+        <div class="d-flex gap-2">
+            {% if demo_mode %}
+            <a href="{{ url_for('dashboard.playground') }}" class="btn btn-sm btn-warning fw-semibold text-dark">
+                <i class="bi bi-controller me-1"></i>Mở Phòng thí nghiệm 8 Ngữ cảnh Demo
+            </a>
+            {% endif %}
+            {% if demo_mode and current_user.is_authenticated and current_user.is_admin %}
+            <a href="{{ url_for('dashboard.db_inspector') }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-database-check me-1"></i>Soi Bảng Database
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-cyber table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ID / Tên Dịch Vụ</th>
+                    <th>Key Prefix & Hash Preview</th>
+                    <th>Trạng Thái</th>
+                    <th>Phân Quyền (Scopes)</th>
+                    <th>IP Whitelist</th>
+                    <th>Rate Limit</th>
+                    <th>Vi Phạm / Lượt Gọi</th>
+                    <th class="text-end">Thao Tác Vòng Đời</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in keys %}
+                <tr>
+                    <td>
+                        <div class="fw-semibold text-white">#{{ k.id }} - {{ k.name }}</div>
+                        <small class="text-secondary">
+                            Owner: <span class="text-info">{{ k.owner.username if k.owner else 'system' }}</span>
+                            {% if k.rotated_from_id %}
+                                | <span class="text-warning">Rotated từ #{{ k.rotated_from_id }}</span>
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <div class="code-mono text-warning">{{ k.masked_key }}</div>
+                        <div class="text-secondary" style="font-size: 0.73rem;">
+                            HMAC-SHA256: <code>{{ k.key_hash[:20] }}...</code>
+                        </div>
+                    </td>
+                    <td>
+                        {% set st = k.status_label %}
+                        {% if st == 'ACTIVE' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>ACTIVE</span>
+                        {% elif st == 'GRACE_PERIOD' %}
+                            <span class="badge bg-info text-dark"><i class="bi bi-hourglass-split me-1"></i>GRACE PERIOD (24h)</span>
+                            <div class="small text-info" style="font-size: 0.72rem;">
+                                Đến: {{ k.grace_period_until.strftime('%m-%d %H:%M') }}
+                            </div>
+                        {% elif st == 'EXPIRED' %}
+                            <span class="badge bg-secondary"><i class="bi bi-clock-history me-1"></i>EXPIRED (TTL)</span>
+                            <div class="small text-secondary" style="font-size: 0.72rem;">
+                                {{ k.expires_at.strftime('%Y-%m-%d') if k.expires_at else '' }}
+                            </div>
+                        {% elif st == 'AUTO_FROZEN' %}
+                            <span class="badge bg-danger"><i class="bi bi-snow2 me-1"></i>AUTO-FROZEN (IDS)</span>
+                            <div class="small text-danger" style="font-size: 0.72rem;" title="{{ k.revoked_reason }}">
+                                Vi phạm 5 lần liên tiếp!
+                            </div>
+                        {% else %}
+                            <span class="badge bg-danger bg-opacity-75"><i class="bi bi-slash-circle me-1"></i>REVOKED</span>
+                            <div class="small text-secondary" style="font-size: 0.72rem;">
+                                {{ (k.revoked_reason or '')[:28] }}...
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for sc in k.get_scopes_list() %}
+                                <span class="badge bg-dark border border-info text-info code-mono">{{ sc }}</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="code-mono small">
+                        {% if k.allowed_ips %}
+                            <span class="text-warning"><i class="bi bi-router me-1"></i>{{ k.allowed_ips }}</span>
+                        {% else %}
+                            <span class="text-secondary">Any IP (*)</span>
+                        {% endif %}
+                    </td>
+                    <td class="code-mono small">
+                        <span class="badge bg-dark border border-secondary">{{ k.rate_limit_per_minute }} req/m</span>
+                    </td>
+                    <td class="small">
+                        <div>
+                            Vi phạm:
+                            <strong class="{% if k.failed_attempts > 0 %}text-danger{% else %}text-secondary{% endif %}">
+                                {{ k.failed_attempts }}/5
+                            </strong>
+                        </div>
+                        <div class="text-secondary">Calls: <strong>{{ k.usage_count }}</strong></div>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-1 flex-wrap">
+                            {% if k.status_label == "ACTIVE" %}
+                            <form method="POST" action="{{ url_for('dashboard.rotate_key', key_id=k.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="grace_period_hours" value="24">
+                                <button type="submit" class="btn btn-sm btn-outline-info"
+                                        title="Xoay vòng sang Key mới, giữ Key cũ sống thêm 24h (Zero-Downtime)">
+                                    <i class="bi bi-arrow-repeat"></i> Rotate
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if k.status_label in ("ACTIVE", "GRACE_PERIOD") %}
+                            <form method="POST" action="{{ url_for('dashboard.revoke_key', key_id=k.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="reason" value="Thu hồi khẩn cấp từ Dashboard">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        title="Thu hồi khẩn cấp (Vô hiệu hóa ngay lập tức)">
+                                    <i class="bi bi-x-octagon"></i> Revoke
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if k.status_label == "AUTO_FROZEN" %}
+                            <form method="POST" action="{{ url_for('dashboard.unlock_key', key_id=k.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-success"
+                                        title="Mở khóa lại Key và đặt lại bộ đếm vi phạm về 0">
+                                    <i class="bi bi-unlock"></i> Mở khóa
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyText(elementId) {
+    const input = document.getElementById(elementId);
+    input.select();
+    navigator.clipboard.writeText(input.value);
+}
+</script>
+{% endblock %}

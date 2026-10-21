@@ -1,0 +1,133 @@
+:root {
+    --bg-dark: #0b1120;
+    --bg-card: #131c31;
+    --bg-card-hover: #1a2642;
+    --border-color: #233252;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-indigo: #6366f1;
+    --accent-green: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-purple: #a855f7;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+}
+
+.navbar-cyber {
+    background: rgba(19, 28, 49, 0.95);
+    border-bottom: 1px solid var(--border-color);
+    backdrop-filter: blur(8px);
+}
+
+.card-cyber {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-main);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.card-cyber-header {
+    background-color: rgba(15, 23, 42, 0.65);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.9rem 1.25rem;
+    font-weight: 600;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, #131c31 0%, #0f172a 100%);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.15rem;
+}
+
+.code-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 0.85rem;
+}
+
+.hash-box {
+    background-color: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    color: #38bdf8;
+    font-family: Consolas, monospace;
+    font-size: 0.78rem;
+    word-break: break-all;
+}
+
+.show-once-banner {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(56, 189, 248, 0.12));
+    border: 2px solid #10b981;
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.table-cyber {
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+.table-cyber thead th {
+    background-color: #0f172a;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-cyber tbody td {
+    border-color: var(--border-color);
+    vertical-align: middle;
+}
+
+.form-control-cyber, .form-select-cyber {
+    background-color: #090d16;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.form-control-cyber:focus, .form-select-cyber:focus {
+    background-color: #090d16;
+    border-color: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.2);
+}
+
+.scenario-btn {
+    text-align: left;
+    background-color: #0f172a;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 10px;
+    padding: 0.75rem 0.95rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.scenario-btn:hover {
+    background-color: var(--bg-card-hover);
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+}
+
+.terminal-box {
+    background-color: #060911;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 1rem;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 0.84rem;
+    max-height: 520px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: #cbd5e1;
+}

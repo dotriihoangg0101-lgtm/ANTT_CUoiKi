@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Nhật Ký Truy Cập API & Kiểm Toán Bảo Mật - HUTECH ATTT{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Bảng 1: API Usage Logs -->
+    <div class="col-lg-7">
+        <div class="card card-cyber">
+            <div class="card-cyber-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-activity text-info me-2"></i>Nhật Ký Kiểm Soát Truy Cập API (<code>api_usage_logs</code>)</span>
+                <span class="badge bg-dark border border-secondary">100 request gần nhất</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-cyber table-sm table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Key Prefix</th>
+                            <th>Method / Endpoint</th>
+                            <th>Client IP</th>
+                            <th>Status</th>
+                            <th>Quyết định / Lý do chặn</th>
+                            <th>Latency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in usage_logs %}
+                        <tr>
+                            <td class="code-mono small text-secondary">{{ log.created_at.strftime('%H:%M:%S') }}</td>
+                            <td class="code-mono small text-warning">{{ log.key_prefix_attempted }}</td>
+                            <td class="code-mono small">
+                                <span class="badge bg-dark border border-secondary">{{ log.method }}</span>
+                                {{ log.endpoint }}
+                            </td>
+                            <td class="code-mono small">{{ log.client_ip }}</td>
+                            <td>
+                                <span class="badge {% if log.status_code < 300 %}bg-success{% elif log.status_code == 429 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ log.status_code }}
+                                </span>
+                            </td>
+                            <td class="small">
+                                {% if log.decision == 'ALLOWED' %}
+                                    <span class="text-success fw-semibold">ALLOWED</span>
+                                {% else %}
+                                    <span class="text-danger fw-semibold">DENIED</span>
+                                    <code class="text-warning ms-1">{{ log.deny_reason }}</code>
+                                {% endif %}
+                            </td>
+                            <td class="code-mono small text-secondary">{{ log.latency_ms }} ms</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-secondary py-4">
+                                Chưa có lượt gọi API nào. Hãy mở trang <strong>8 Ngữ cảnh Demo</strong> để chạy thử!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng 2: Security Audit Logs -->
+    <div class="col-lg-5">
+        <div class="card card-cyber">
+            <div class="card-cyber-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shield-exclamation text-warning me-2"></i>Nhật Ký Kiểm Toán An Ninh (<code>security_audit_logs</code>)</span>
+                <span class="badge bg-dark border border-secondary">50 sự kiện gần nhất</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-cyber table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Mức độ / Sự kiện</th>
+                            <th>Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in audit_logs %}
+                        <tr>
+                            <td class="code-mono small text-secondary">{{ a.created_at.strftime('%H:%M:%S') }}</td>
+                            <td>
+                                <span class="badge {% if a.severity == 'CRITICAL' %}bg-danger{% elif a.severity == 'WARNING' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                                    {{ a.event_type }}
+                                </span>
+                                <div class="small text-secondary code-mono mt-1">IP: {{ a.ip_address }}</div>
+                            </td>
+                            <td class="small text-light">{{ a.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

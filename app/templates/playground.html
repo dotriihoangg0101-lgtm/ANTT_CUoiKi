@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+{% block title %}Phòng Thí Nghiệm 8 Ngữ Cảnh Bảo Mật API Key - HUTECH ATTT{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <div>
+        <h4 class="mb-0 text-warning fw-bold">
+            <i class="bi bi-terminal-plus me-2"></i>Phòng Thí Nghiệm 8 Ngữ Cảnh Bảo Mật & Mô Phỏng Tấn Công
+        </h4>
+        <small class="text-secondary">
+            Bấm trực tiếp vào từng tình huống bên dưới để kiểm chứng 6 Lớp Phòng Thủ Middleware và Database thực tế (không cần mở Postman).
+        </small>
+    </div>
+    <a href="{{ url_for('dashboard.db_inspector') }}" class="btn btn-sm btn-outline-info">
+        <i class="bi bi-database-fill-gear me-1"></i>Xem Dữ Liệu Thô Trong Database
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Cột trái: 8 Kịch bản Demo 1-Click -->
+    <div class="col-lg-5">
+        <div class="card card-cyber">
+            <div class="card-cyber-header text-info">
+                <i class="bi bi-play-circle-fill me-1"></i>Chọn Kịch Bản Demo Thực Chiến (1-Click)
+            </div>
+            <div class="card-body d-grid gap-2 p-3">
+                <!-- Ngữ cảnh 1 -->
+                <button type="button" class="scenario-btn" onclick="runScenario1()">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-success">1. Ngữ cảnh Chuẩn: Xác thực & Đọc Hồ sơ DB</strong>
+                        <span class="badge bg-success">200 OK</span>
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Dùng <code>Full-Access Key</code> gọi <code>GET /api/v1/records</code> -> Giải mã Fernet từ bảng <code>vault_records</code>.
+                    </div>
+                </button>
+
+                <!-- Ngữ cảnh 2 -->
+                <div class="row g-2">
+                    <div class="col-7">
+                        <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario2Deny()">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-danger">2A. Vi phạm Phân quyền Scope</strong>
+                                <span class="badge bg-danger">403</span>
+                            </div>
+                            <div class="small text-secondary mt-1">
+                                Dùng <code>Read-Only Key</code> cố tình gọi <code>POST /api/v1/records</code> (Thiếu <code>write:records</code>).
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-5">
+                        <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario2Allow()">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-info">2B. Tạo Bản ghi DB</strong>
+                                <span class="badge bg-info text-dark">201</span>
+                            </div>
+                            <div class="small text-secondary mt-1">
+                                Dùng <code>Full-Access Key</code> thêm hồ sơ mới vào DB.
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ngữ cảnh 3 -->
+                <button type="button" class="scenario-btn" onclick="runScenario3IpBlock()">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-danger">3. Kiểm soát Mạng: Lộ Key nhưng gọi từ IP lạ</strong>
+                        <span class="badge bg-danger">403 IP Blocked</span>
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Dùng <code>Internal Server Key</code> (chỉ cho phép <code>127.0.0.1</code>) nhưng giả lập gọi từ IP nước ngoài <code>185.220.101.45</code>.
+                    </div>
+                </button>
+
+                <!-- Ngữ cảnh 4 -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario4Expired()">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-warning">4A. Key Hết hạn (TTL)</strong>
+                                <span class="badge bg-secondary">401</span>
+                            </div>
+                            <div class="small text-secondary mt-1">
+                                Gọi bằng Key đã quá hạn <code>expires_at</code> trong DB.
+                            </div>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario4Revoked()">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-danger">4B. Key Đã Thu hồi</strong>
+                                <span class="badge bg-danger">401</span>
+                            </div>
+                            <div class="small text-secondary mt-1">
+                                Gọi bằng Key bị lộ trên GitHub đã bị Admin bấm Revoke.
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ngữ cảnh 5 -->
+                <button type="button" class="scenario-btn" onclick="runScenario5GracePeriod()">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-info">5. Xoay vòng Khóa (Zero-Downtime Grace Period)</strong>
+                        <span class="badge bg-info text-dark">200 + Sunset Header</span>
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Gọi bằng Key cũ đang trong 24h ân hạn -> Vẫn cho phép chạy nhưng trả kèm Header <code>X-API-Key-Deprecated: true</code>.
+                    </div>
+                </button>
+
+                <!-- Ngữ cảnh 6 -->
+                <button type="button" class="scenario-btn" onclick="runScenario6RateLimitBurst()">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-warning">6. Chống DDoS/Spam: Bắn liên tiếp 7 Requests (Quota=5/m)</strong>
+                        <span class="badge bg-warning text-dark">429 Rate Limit</span>
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Dùng <code>Free-Tier Key</code> (giới hạn 5 req/phút) bắn 7 phát liên tục -> 5 phát đầu <code>200 OK</code>, phát thứ 6 & 7 bị chặn <code>429</code>!
+                    </div>
+                </button>
+
+                <!-- Ngữ cảnh 7 -->
+                <button type="button" class="scenario-btn" onclick="runScenario7AutoFreeze()">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-danger">7. Tự động Đóng băng khi Dò quét 5 lần (Auto-Freeze IDS)</strong>
+                        <span class="badge bg-danger">AUTO-FROZEN</span>
+                    </div>
+                    <div class="small text-secondary mt-1">
+                        Cố tình vi phạm 5 lần liên tiếp -> Hệ thống tự động khóa cứng Key trong DB, lần thứ 6 gọi đúng cũng bị chặn!
+                    </div>
+                </button>
+
+                <!-- Ngữ cảnh 8 -->
+                <div class="p-2 rounded border border-secondary bg-dark bg-opacity-50">
+                    <div class="small fw-bold text-info mb-2">
+                        <i class="bi bi-pen-fill me-1"></i>8. Chữ ký số HMAC-SHA256 & Chống Replay / Sửa dữ liệu (API Chuyển tiền):
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="runScenario8Hmac('valid')">
+                                8A. Chữ ký Chuẩn (200)
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="btn btn-sm btn-outline-warning w-100" onclick="runScenario8Hmac('replay')">
+                                8B. Replay 15p trước (401)
+                            </button>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="runScenario8Hmac('tampered')">
+                                8C. Sửa Số tiền MITM (401)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ngữ cảnh phụ: CWE-598 -->
+                <button type="button" class="scenario-btn" onclick="runScenario0UrlLeak()">
+                    <div class="d-flex justify-content-between">
+                        <strong class="text-secondary">Chốt chặn 0: Truyền lộ API Key trên URL (?api_key=...)</strong>
+                        <span class="badge bg-secondary">400 CWE-598</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột phải: Bộ gửi Request tùy chỉnh & Màn hình kết quả trực quan -->
+    <div class="col-lg-7">
+        <div class="card card-cyber mb-3">
+            <div class="card-cyber-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-sliders me-2 text-info"></i>Cấu hình Gói tin HTTP Request</span>
+                <button type="button" class="btn btn-sm btn-info text-dark fw-semibold" onclick="sendManualRequest()">
+                    <i class="bi bi-send-fill me-1"></i>Gửi Request Này
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="small text-secondary">HTTP Method</label>
+                        <select id="reqMethod" class="form-select form-select-sm form-select-cyber code-mono">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="small text-secondary">Endpoint Path</label>
+                        <input type="text" id="reqPath" class="form-control form-control-sm form-control-cyber code-mono"
+                               value="/api/v1/records">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-secondary">Giả lập IP Gửi đến (<code>X-Simulated-IP</code>)</label>
+                        <input type="text" id="reqSimIp" class="form-control form-control-sm form-control-cyber code-mono"
+                               value="127.0.0.1">
+                    </div>
+                    <div class="col-12">
+                        <label class="small text-secondary">Header <code>X-API-Key</code></label>
+                        <input type="text" id="reqApiKey" class="form-control form-control-sm form-control-cyber code-mono text-warning"
+                               value="{{ demo_catalog['full_access']['raw_key'] }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-secondary">Header <code>X-Timestamp</code> (HMAC)</label>
+                        <input type="text" id="reqTimestamp" class="form-control form-control-sm form-control-cyber code-mono"
+                               placeholder="Tùy chọn">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="small text-secondary">Header <code>X-Signature</code> (HMAC-SHA256)</label>
+                        <input type="text" id="reqSignature" class="form-control form-control-sm form-control-cyber code-mono"
+                               placeholder="Tùy chọn (Bắt buộc cho /api/v1/transfer)">
+                    </div>
+                    <div class="col-12">
+                        <label class="small text-secondary">Request JSON Body (Dành cho POST)</label>
+                        <textarea id="reqBody" rows="2" class="form-control form-control-sm form-control-cyber code-mono"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kết quả phản hồi -->
+        <div class="card card-cyber">
+            <div class="card-cyber-header d-flex justify-content-between align-items-center">
+                <span id="scenarioTitleLabel" class="text-white">
+                    <i class="bi bi-cpu-fill me-2 text-success"></i>Kết quả Kiểm tra Bảo mật & Phản hồi từ Server
+                </span>
+                <span id="httpStatusBadge" class="badge bg-secondary">Sẵn sàng</span>
+            </div>
+            <div class="card-body">
+                <div id="securityHeadersBar" class="mb-2 d-flex flex-wrap gap-2"></div>
+                <div id="responseTerminal" class="terminal-box">Bấm vào một trong 8 kịch bản bên trái để xem kết quả kiểm tra an ninh thời gian thực...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CATALOG = {{ demo_catalog | tojson }};
+
+function setFormValues(method, path, apiKey, simIp = "127.0.0.1", body = "", ts = "", sig = "") {
+    document.getElementById("reqMethod").value = method;
+    document.getElementById("reqPath").value = path;
+    document.getElementById("reqApiKey").value = apiKey;
+    document.getElementById("reqSimIp").value = simIp;
+    document.getElementById("reqBody").value = body;
+    document.getElementById("reqTimestamp").value = ts;
+    document.getElementById("reqSignature").value = sig;
+}
+
+function renderResponse(title, status, headersObj, dataObj) {
+    const lbl = document.getElementById("scenarioTitleLabel");
+    lbl.textContent = "";
+    const ic = document.createElement("i");
+    ic.className = "bi bi-shield-shaded me-2 text-info";
+    lbl.appendChild(ic);
+    lbl.appendChild(document.createTextNode(title));
+    const badge = document.getElementById("httpStatusBadge");
+    badge.textContent = `HTTP ${status}`;
+    badge.className = "badge " + (status >= 200 && status < 300 ? "bg-success" : (status === 429 ? "bg-warning text-dark" : "bg-danger"));
+
+    const hBar = document.getElementById("securityHeadersBar");
+    hBar.innerHTML = "";
+    const interestingHeaders = ["x-ratelimit-limit", "x-ratelimit-remaining", "retry-after", "x-api-key-deprecated", "x-api-key-sunset"];
+    for (const h of interestingHeaders) {
+        if (headersObj[h]) {
+            const pill = document.createElement("span");
+            pill.className = "badge bg-dark border border-info text-info code-mono";
+            pill.textContent = `${h}: ${headersObj[h]}`;
+            hBar.appendChild(pill);
+        }
+    }
+
+    document.getElementById("responseTerminal").textContent = JSON.stringify(dataObj, null, 2);
+}
+
+async function executeRequest(title) {
+    const method = document.getElementById("reqMethod").value;
+    const path = document.getElementById("reqPath").value;
+    const apiKey = document.getElementById("reqApiKey").value;
+    const simIp = document.getElementById("reqSimIp").value;
+    const body = document.getElementById("reqBody").value;
+    const ts = document.getElementById("reqTimestamp").value;
+    const sig = document.getElementById("reqSignature").value;
+
+    const headers = { "Accept": "application/json" };
+    if (apiKey) headers["X-API-Key"] = apiKey;
+    if (simIp) headers["X-Simulated-IP"] = simIp;
+    if (ts) headers["X-Timestamp"] = ts;
+    if (sig) headers["X-Signature"] = sig;
+    if (method === "POST") headers["Content-Type"] = "application/json";
+
+    const opts = { method, headers };
+    if (method === "POST" && body) opts.body = body;
+
+    const resp = await fetch(path, opts);
+    const respHeaders = {};
+    resp.headers.forEach((v, k) => { respHeaders[k.toLowerCase()] = v; });
+    const data = await resp.json();
+    renderResponse(title, resp.status, respHeaders, data);
+    return { status: resp.status, data, headers: respHeaders };
+}
+
+function sendManualRequest() {
+    executeRequest("Truy vấn tùy chỉnh (Manual Request)");
+}
+
+// 1. Ngữ cảnh chuẩn
+function runScenario1() {
+    setFormValues("GET", "/api/v1/records", CATALOG.full_access.raw_key, "127.0.0.1");
+    executeRequest("Ngữ cảnh 1: Xác thực Key hợp lệ & Giải mã dữ liệu Fernet từ DB (200 OK)");
+}
+
+// 2A. Vi phạm Scope
+function runScenario2Deny() {
+    const sampleBody = JSON.stringify({
+        full_name: "Hacker Cố Tình Ghi Trái Phép",
+        balance: 99999999,
+        classification: "SECRET"
+    });
+    setFormValues("POST", "/api/v1/records", CATALOG.read_only.raw_key, "127.0.0.1", sampleBody);
+    executeRequest("Ngữ cảnh 2A: Chặn đứng Key Read-Only cố tình gọi API Ghi dữ liệu (403 Insufficient Scope)");
+}
+
+// 2B. Đủ quyền Scope tạo bản ghi mới
+function runScenario2Allow() {
+    const sampleBody = JSON.stringify({
+        full_name: "Công ty TNHH An Ninh Mạng HUTECH",
+        account_number_masked: "9704-68**-****-2026",
+        secret_note: "Hồ sơ tạo mới thành công từ Playground - Đã mã hóa Fernet",
+        balance: 250000000,
+        classification: "CONFIDENTIAL"
+    });
+    setFormValues("POST", "/api/v1/records", CATALOG.full_access.raw_key, "127.0.0.1", sampleBody);
+    executeRequest("Ngữ cảnh 2B: Tạo mới Hồ sơ vào Database với Key có quyền 'write:records' (201 Created)");
+}
+
+// 3. Vi phạm IP Whitelist
+function runScenario3IpBlock() {
+    setFormValues("GET", "/api/v1/records", CATALOG.ip_restricted.raw_key, "185.220.101.45");
+    executeRequest("Ngữ cảnh 3: Chặn Key bị lộ gọi từ IP lạ ngoài vùng Whitelist (403 IP Not Whitelisted)");
+}
+
+// 4A. Key hết hạn
+function runScenario4Expired() {
+    setFormValues("GET", "/api/v1/records", CATALOG.expired_key.raw_key, "127.0.0.1");
+    executeRequest("Ngữ cảnh 4A: Chặn API Key đã hết hạn thời gian sống TTL (401 Expired)");
+}
+
+// 4B. Key đã bị thu hồi
+function runScenario4Revoked() {
+    setFormValues("GET", "/api/v1/records", CATALOG.revoked_key.raw_key, "127.0.0.1");
+    executeRequest("Ngữ cảnh 4B: Chặn API Key bị lộ trên GitHub đã bị Admin thu hồi (401 Revoked)");
+}
+
+// 5. Key đang trong thời gian ân hạn Rotate
+function runScenario5GracePeriod() {
+    setFormValues("GET", "/api/v1/records", CATALOG.rotating_old_key.raw_key, "127.0.0.1");
+    executeRequest("Ngữ cảnh 5: Key cũ trong 24h Ân hạn (Grace Period) vẫn hoạt động kèm Header cảnh báo Sunset");
+}
+
+// 6. Bắn liên tiếp 7 requests để demo Rate Limit (Quota = 5 req/phút)
+async function runScenario6RateLimitBurst() {
+    setFormValues("GET", "/api/v1/records", CATALOG.rate_limited_free.raw_key, "127.0.0.1");
+    const logLines = [];
+    let lastStatus = 200;
+    let lastHeaders = {};
+
+    for (let i = 1; i <= 7; i++) {
+        const resp = await fetch("/api/v1/records", {
+            method: "GET",
+            headers: {
+                "X-API-Key": CATALOG.rate_limited_free.raw_key,
+                "X-Simulated-IP": "127.0.0.1"
+            }
+        });
+        lastStatus = resp.status;
+        lastHeaders = {};
+        resp.headers.forEach((v, k) => { lastHeaders[k.toLowerCase()] = v; });
+        const body = await resp.json();
+        logLines.push({
+            attempt: `Request #${i}/7`,
+            http_status: resp.status,
+            remaining_quota: lastHeaders["x-ratelimit-remaining"],
+            result: resp.status === 200 ? "ALLOWED (200 OK)" : `BLOCKED (${body.error_code}) - ${body.message}`
+        });
+    }
+
+    renderResponse(
+        "Ngữ cảnh 6: Mô phỏng bắn 7 Requests liên tiếp vào Key giới hạn 5 req/phút (429 Too Many Requests)",
+        lastStatus,
+        lastHeaders,
+        {
+            scenario: "Per-Key Rate Limiting Burst Test (Quota = 5 requests/minute)",
+            key_tested: CATALOG.rate_limited_free.raw_key,
+            burst_results: logLines
+        }
+    );
+}
+
+// 7. Tự động đóng băng Key sau 5 lần vi phạm liên tiếp (Auto-Freeze Intrusion Detection)
+async function runScenario7AutoFreeze() {
+    const targetKey = CATALOG.intrusion_target.raw_key;
+    setFormValues("GET", "/api/v1/records", targetKey, "203.113.148.99");
+    const steps = [];
+
+    // Bắn 5 lần từ IP trái phép 203.113.148.99
+    for (let i = 1; i <= 5; i++) {
+        const r = await fetch("/api/v1/records", {
+            method: "GET",
+            headers: {
+                "X-API-Key": targetKey,
+                "X-Simulated-IP": "203.113.148.99"
+            }
+        });
+        const d = await r.json();
+        steps.push({
+            step: `Vi phạm lần #${i} (Gọi từ IP lạ 203.113.148.99)`,
+            http_status: r.status,
+            error_code: d.error_code,
+            failed_attempts_counter: d.failed_attempts,
+            auto_frozen_triggered: d.auto_frozen_triggered || false
+        });
+    }
+
+    // Lần thứ 6: Quay lại gọi đúng IP hợp lệ 127.0.0.1 và đúng Scope -> Vẫn bị từ chối vì Key đã bị AUTO_FROZEN!
+    const r6 = await fetch("/api/v1/records", {
+        method: "GET",
+        headers: {
+            "X-API-Key": targetKey,
+            "X-Simulated-IP": "127.0.0.1"
+        }
+    });
+    const d6 = await r6.json();
+    steps.push({
+        step: "Lần #6: Thử gọi lại từ IP hợp lệ 127.0.0.1 sau khi bị đóng băng",
+        http_status: r6.status,
+        error_code: d6.error_code,
+        message: d6.message
+    });
+
+    renderResponse(
+        "Ngữ cảnh 7: Tự động Đóng băng Key (Auto-Freeze) sau 5 lần vi phạm liên tiếp",
+        r6.status,
+        {},
+        {
+            scenario: "Active Intrusion Detection & Auto-Freeze (Threshold = 5 violations)",
+            target_key: targetKey,
+            attack_timeline: steps
+        }
+    );
+}
+
+// 8. Chữ ký số HMAC-SHA256 & Chống Replay Attack / Tampering
+async function runScenario8Hmac(mode) {
+    const prepResp = await fetch("/api/v1/demo/compute-hmac", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            signing_secret: CATALOG.full_access.signing_secret,
+            method: "POST",
+            path: "/api/v1/transfer",
+            mode: mode
+        })
+    });
+    const prep = await prepResp.json();
+
+    setFormValues(
+        "POST",
+        "/api/v1/transfer",
+        CATALOG.full_access.raw_key,
+        "127.0.0.1",
+        prep.body_to_send,
+        prep.timestamp,
+        prep.signature
+    );
+
+    const titles = {
+        valid: "Ngữ cảnh 8A: Giao dịch Chuyển tiền có Chữ ký HMAC-SHA256 & Timestamp Hợp lệ (200 OK)",
+        replay: "Ngữ cảnh 8B: Chặn Tấn công Phát lại Gói tin cũ từ 15 phút trước (401 Replay Attack Detected)",
+        tampered: "Ngữ cảnh 8C: Chặn Tấn công MITM Sửa Số tiền từ 1 Triệu thành 999 Triệu trên đường truyền (401 Invalid HMAC)"
+    };
+    await executeRequest(titles[mode]);
+}
+
+// Chốt chặn 0: Truyền lộ API Key trên URL Query String
+function runScenario0UrlLeak() {
+    setFormValues("GET", `/api/v1/records?api_key=${CATALOG.full_access.raw_key}`, "", "127.0.0.1");
+    executeRequest("Chốt chặn 0 (CWE-598): Từ chối khi truyền lộ API Key trên URL Query String (400 Bad Request)");
+}
+</script>
+{% endblock %}
