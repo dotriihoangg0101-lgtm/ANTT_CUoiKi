@@ -35,6 +35,8 @@ class Config:
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     AUTO_FREEZE_THRESHOLD = int(os.getenv("AUTO_FREEZE_THRESHOLD", "5"))
     HMAC_MAX_TIMESTAMP_SKEW_SECONDS = 300  # Chống Replay Attack trong cửa sổ 5 phút
+    # Số vòng lặp PBKDF2-HMAC-SHA256 (NIST SP 800-132; OWASP khuyến nghị >= 600.000)
+    PASSWORD_PBKDF2_ITERATIONS = int(os.getenv("PASSWORD_PBKDF2_ITERATIONS", "600000"))
     DEMO_MODE = os.environ.get("DEMO_MODE", "0") == "1"
     # Mật khẩu 2 tài khoản demo (chỉ dùng khi DEMO_MODE=1) — khai báo trong .env
     DEMO_ADMIN_PASSWORD = os.environ.get("DEMO_ADMIN_PASSWORD")
@@ -52,6 +54,8 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     WTF_CSRF_ENABLED = False
     AUTO_FREEZE_THRESHOLD = 5
+    # Giảm số vòng PBKDF2 CHỈ trong test để bộ test chạy nhanh (định dạng hash không đổi)
+    PASSWORD_PBKDF2_ITERATIONS = 1000
 
 
 FORBIDDEN_EXAMPLE_SECRETS = {

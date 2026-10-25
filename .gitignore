@@ -7,3 +7,5 @@ __pycache__/
 instance/
 *.db
 .pytest_cache/
+# Log của công cụ chụp ảnh tự động
+.playwright-mcp/

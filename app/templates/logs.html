@@ -2,13 +2,21 @@
 {% block title %}Nhật Ký Truy Cập API & Kiểm Toán Bảo Mật - HUTECH ATTT{% endblock %}
 
 {% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-eyebrow"><i class="bi bi-journal-code me-1"></i>Giám sát</div>
+        <h1 class="page-title">Nhật Ký Truy Cập API & Kiểm Toán Bảo Mật</h1>
+        <small class="text-secondary">Theo dõi từng quyết định của Middleware và các sự kiện an ninh quan trọng.</small>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- Bảng 1: API Usage Logs -->
     <div class="col-lg-7">
         <div class="card card-cyber">
             <div class="card-cyber-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-activity text-info me-2"></i>Nhật Ký Kiểm Soát Truy Cập API (<code>api_usage_logs</code>)</span>
-                <span class="badge bg-dark border border-secondary">100 request gần nhất</span>
+                <span class="badge badge-chip">100 request gần nhất</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-cyber table-sm table-hover mb-0">
@@ -29,7 +37,7 @@
                             <td class="code-mono small text-secondary">{{ log.created_at.strftime('%H:%M:%S') }}</td>
                             <td class="code-mono small text-warning">{{ log.key_prefix_attempted }}</td>
                             <td class="code-mono small">
-                                <span class="badge bg-dark border border-secondary">{{ log.method }}</span>
+                                <span class="badge badge-chip">{{ log.method }}</span>
                                 {{ log.endpoint }}
                             </td>
                             <td class="code-mono small">{{ log.client_ip }}</td>
@@ -66,7 +74,7 @@
         <div class="card card-cyber">
             <div class="card-cyber-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-shield-exclamation text-warning me-2"></i>Nhật Ký Kiểm Toán An Ninh (<code>security_audit_logs</code>)</span>
-                <span class="badge bg-dark border border-secondary">50 sự kiện gần nhất</span>
+                <span class="badge badge-chip">50 sự kiện gần nhất</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-cyber table-sm mb-0">
@@ -87,7 +95,7 @@
                                 </span>
                                 <div class="small text-secondary code-mono mt-1">IP: {{ a.ip_address }}</div>
                             </td>
-                            <td class="small text-light">{{ a.description }}</td>
+                            <td class="small text-body">{{ a.description }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

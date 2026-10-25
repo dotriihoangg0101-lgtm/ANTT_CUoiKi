@@ -18,7 +18,7 @@ ANTT_CUoiKi/
 │   ├── middleware/
 │   │   └── api_auth.py            # Middleware 6 Lớp (@require_api_key) & Auto-Freeze IDS
 │   ├── models/
-│   │   ├── user.py                # Bảng users (Mật khẩu băm Argon2id, phân quyền role admin/developer)
+│   │   ├── user.py                # Bảng users (Mật khẩu băm PBKDF2-HMAC-SHA256, phân quyền role admin/developer)
 │   │   ├── api_key.py             # Bảng api_keys (key_prefix 16 ký tự, key_hash HMAC-SHA256, signing_secret_enc Fernet)
 │   │   ├── audit_log.py           # Bảng api_usage_logs & security_audit_logs
 │   │   └── vault_record.py        # Bảng vault_records (account_number_masked, encrypted_secret_note Fernet)
@@ -27,7 +27,7 @@ ANTT_CUoiKi/
 │   │   ├── dashboard.py           # Quản lý vòng đời Key, RBAC chống IDOR, Playground, Logs, DB Inspector
 │   │   └── api.py                 # REST API bảo vệ bởi @require_api_key (/records, /transfer, /demo/compute-hmac)
 │   ├── services/
-│   │   ├── crypto_service.py      # Argon2id, HMAC-SHA256 + Pepper, Fernet, HMAC Signature & Anti-Replay Cache
+│   │   ├── crypto_service.py      # PBKDF2-HMAC-SHA256, HMAC-SHA256 + Pepper, Fernet + HKDF, HMAC Signature & Anti-Replay Cache
 │   │   ├── key_service.py         # Cấp phát, Xoay vòng (Grace Period), Thu hồi (Revoke), Mở khóa (Unlock)
 │   │   └── seed_service.py        # Khởi tạo dữ liệu mẫu cho 8 kịch bản (chỉ chạy khi DEMO_MODE=1)
 │   ├── utils/
@@ -85,7 +85,7 @@ erDiagram
         int id PK
         string username UK "Tên đăng nhập"
         string email UK "Email"
-        string password_hash "Băm bằng Argon2id"
+        string password_hash "Băm bằng PBKDF2-HMAC-SHA256"
         string role "admin | developer"
         boolean is_active "Trạng thái tài khoản"
         datetime created_at

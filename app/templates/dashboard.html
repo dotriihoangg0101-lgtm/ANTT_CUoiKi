@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
         <div>
             <span class="badge bg-success me-2">SHOW-ONCE SECRET PATTERN</span>
-            <strong class="text-white fs-5">
+            <strong class="text-body-emphasis fs-5">
                 {% if show_once_data.action == 'ROTATED' %}
                     Đã xoay vòng (Rotate) sang API Key mới: {{ show_once_data.name }}
                 {% else %}
@@ -42,7 +42,7 @@
         <div class="col-md-6">
             <label class="small text-info fw-semibold mb-1">2. HMAC Signing Secret (Dùng ký gói tin chống Replay Attack):</label>
             <div class="input-group">
-                <input type="text" id="newSigningSecretInput" class="form-control form-control-cyber code-mono text-light"
+                <input type="text" id="newSigningSecretInput" class="form-control form-control-cyber code-mono"
                        value="{{ show_once_data.signing_secret }}" readonly>
                 <button class="btn btn-outline-info" type="button" onclick="copyText('newSigningSecretInput')">
                     <i class="bi bi-clipboard"></i> Copy Secret
@@ -60,38 +60,46 @@
 </div>
 {% endif %}
 
+<div class="page-header">
+    <div>
+        <div class="page-eyebrow"><i class="bi bi-grid-1x2-fill me-1"></i>Bảng điều khiển</div>
+        <h1 class="page-title">Quản lý API Key</h1>
+        <small class="text-secondary">Cấp phát, xoay vòng, thu hồi và giám sát toàn bộ vòng đời API Key.</small>
+    </div>
+</div>
+
 <!-- Thống kê tổng quan -->
 <div class="row g-3 mb-4">
     <div class="col-md-2 col-6">
-        <div class="stat-card">
+        <div class="stat-card stat-neutral">
             <div class="text-secondary small">Tổng số API Keys</div>
-            <div class="fs-3 fw-bold text-white">{{ stats.total_keys }}</div>
+            <div class="fs-3 fw-bold text-body-emphasis">{{ stats.total_keys }}</div>
             <div class="small text-info"><i class="bi bi-key me-1"></i>HMAC-SHA256</div>
         </div>
     </div>
     <div class="col-md-2 col-6">
-        <div class="stat-card">
+        <div class="stat-card stat-success">
             <div class="text-secondary small">Đang hoạt động</div>
             <div class="fs-3 fw-bold text-success">{{ stats.active_keys }}</div>
             <div class="small text-secondary">Active & Grace Period</div>
         </div>
     </div>
     <div class="col-md-2 col-6">
-        <div class="stat-card">
+        <div class="stat-card stat-danger">
             <div class="text-secondary small">Đã khóa / Thu hồi</div>
             <div class="fs-3 fw-bold text-danger">{{ stats.frozen_or_revoked }}</div>
             <div class="small text-secondary">Revoked & Auto-Frozen</div>
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="stat-card">
+        <div class="stat-card stat-info">
             <div class="text-secondary small">Tổng lượt gọi API</div>
             <div class="fs-3 fw-bold text-info">{{ stats.total_requests }}</div>
             <div class="small text-secondary">Qua Middleware 6 lớp</div>
         </div>
     </div>
     <div class="col-md-3 col-12">
-        <div class="stat-card">
+        <div class="stat-card stat-warning">
             <div class="text-secondary small">Cuộc tấn công / Vi phạm bị chặn</div>
             <div class="fs-3 fw-bold text-warning">{{ stats.blocked_attacks }}</div>
             <div class="small text-danger"><i class="bi bi-shield-exclamation me-1"></i>Tự động khóa sau 5 lần sai</div>
@@ -105,7 +113,7 @@
         <div class="card card-cyber h-100">
             <div class="card-cyber-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-plus-circle-fill text-info me-2"></i>Cấp phát API Key An toàn Mới (CSPRNG + HMAC-SHA256)</span>
-                <span class="badge bg-dark border border-secondary text-secondary">Show-Once Pattern</span>
+                <span class="badge badge-chip">Show-Once Pattern</span>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('dashboard.create_key') }}">
@@ -154,7 +162,7 @@
                                 {% for scope_code, scope_desc in available_scopes %}
                                 {% if current_user.is_admin or scope_code in ('read:records', 'write:records') %}
                                 <div class="col-md-6">
-                                    <div class="form-check p-2 rounded border border-secondary bg-dark bg-opacity-50">
+                                    <div class="form-check p-2 scope-option">
                                         <input class="form-check-input ms-1" type="checkbox" name="scopes"
                                                value="{{ scope_code }}" id="scope_{{ loop.index }}"
                                                {% if scope_code == 'read:records' %}checked{% endif %}>
@@ -192,14 +200,14 @@
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
                     {% for audit in recent_audits %}
-                    <div class="list-group-item bg-transparent border-secondary py-2 px-3">
+                    <div class="list-group-item bg-transparent py-2 px-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="badge {% if audit.severity == 'CRITICAL' %}bg-danger{% elif audit.severity == 'WARNING' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
                                 {{ audit.event_type }}
                             </span>
                             <small class="text-secondary code-mono">{{ audit.created_at.strftime('%H:%M:%S') }}</small>
                         </div>
-                        <div class="small text-light mt-1">{{ audit.description }}</div>
+                        <div class="small text-body mt-1">{{ audit.description }}</div>
                     </div>
                     {% endfor %}
                 </div>
@@ -243,7 +251,7 @@
                 {% for k in keys %}
                 <tr>
                     <td>
-                        <div class="fw-semibold text-white">#{{ k.id }} - {{ k.name }}</div>
+                        <div class="fw-semibold text-body-emphasis">#{{ k.id }} - {{ k.name }}</div>
                         <small class="text-secondary">
                             Owner: <span class="text-info">{{ k.owner.username if k.owner else 'system' }}</span>
                             {% if k.rotated_from_id %}
@@ -286,7 +294,7 @@
                     <td>
                         <div class="d-flex flex-wrap gap-1">
                             {% for sc in k.get_scopes_list() %}
-                                <span class="badge bg-dark border border-info text-info code-mono">{{ sc }}</span>
+                                <span class="badge badge-chip badge-chip-info code-mono">{{ sc }}</span>
                             {% endfor %}
                         </div>
                     </td>
@@ -298,7 +306,7 @@
                         {% endif %}
                     </td>
                     <td class="code-mono small">
-                        <span class="badge bg-dark border border-secondary">{{ k.rate_limit_per_minute }} req/m</span>
+                        <span class="badge badge-chip">{{ k.rate_limit_per_minute }} req/m</span>
                     </td>
                     <td class="small">
                         <div>

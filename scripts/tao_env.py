@@ -53,8 +53,8 @@ def build_env_text() -> str:
         f"MASTER_ENCRYPTION_KEY={fernet_key}",
         "",
         "# --- Mật khẩu tài khoản demo (chỉ dùng khi DEMO_MODE=1) ---",
-        f"DEMO_ADMIN_PASSWORD={secrets.token_urlsafe(9)}",
-        f"DEMO_DEV_PASSWORD={secrets.token_urlsafe(9)}",
+        f"DEMO_ADMIN_PASSWORD={secrets.token_urlsafe(15)}",
+        f"DEMO_DEV_PASSWORD={secrets.token_urlsafe(15)}",
         "",
         "# --- 8 API Key demo cho trang Playground (chỉ dùng khi DEMO_MODE=1) ---",
     ]

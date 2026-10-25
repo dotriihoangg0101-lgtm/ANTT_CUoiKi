@@ -3,6 +3,8 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from app.extensions import db, limiter
 from app.models import SecurityAuditLog, User
+from app.services.crypto_service import password_needs_rehash
+from app.services.password_policy import MAX_LENGTH, MIN_LENGTH, validate_password
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -20,6 +22,9 @@ def login():
 
         user = User.query.filter_by(username=username).first()
         if user and user.is_active and user.check_password(password):
+            # Nâng cấp hash cũ (Argon2id / PBKDF2 ít vòng) lên PBKDF2-HMAC-SHA256 hiện hành
+            if password_needs_rehash(user.password_hash):
+                user.set_password(password)
             login_user(user, remember=True)
             db.session.add(
                 SecurityAuditLog(
@@ -31,7 +36,7 @@ def login():
                 )
             )
             db.session.commit()
-            flash(f"Chào mừng {user.username}! Đã xác thực mật khẩu bằng Argon2id.", "success")
+            flash(f"Chào mừng {user.username}! Đã xác thực mật khẩu bằng PBKDF2-HMAC-SHA256 (NIST SP 800-132).", "success")
             return redirect(url_for("dashboard.index"))
 
         db.session.add(
@@ -89,8 +94,16 @@ def register():
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
 
-        if len(username) < 3 or len(password) < 8:
-            flash("Username phải từ 3 ký tự và mật khẩu phải từ 8 ký tự trở lên.", "danger")
+        if len(username) < 3:
+            flash("Username phải từ 3 ký tự trở lên.", "danger")
+            return redirect(url_for("auth.register"))
+
+        # Chính sách mật khẩu NIST SP 800-63B-4: tối thiểu 15 ký tự, kiểm tra blocklist,
+        # không áp quy tắc thành phần (chữ hoa / số / ký tự đặc biệt).
+        password_errors = validate_password(password, username=username, email=email)
+        if password_errors:
+            for err in password_errors:
+                flash(err, "danger")
             return redirect(url_for("auth.register"))
 
         if User.query.filter((User.username == username) | (User.email == email)).first():
@@ -108,16 +121,16 @@ def register():
                 event_type="USER_REGISTERED",
                 severity="INFO",
                 ip_address=request.remote_addr or "127.0.0.1",
-                description=f"Đăng ký tài khoản mới '{username}' (Mật khẩu đã băm bằng Argon2id).",
+                description=f"Đăng ký tài khoản mới '{username}' (Mật khẩu đã băm bằng PBKDF2-HMAC-SHA256).",
             )
         )
         db.session.commit()
 
         login_user(user)
-        flash("Đăng ký tài khoản thành công! Mật khẩu đã được bảo vệ bằng Argon2id.", "success")
+        flash("Đăng ký tài khoản thành công! Mật khẩu đã được băm bằng PBKDF2-HMAC-SHA256 (NIST SP 800-132).", "success")
         return redirect(url_for("dashboard.index"))
 
-    return render_template("register.html")
+    return render_template("register.html", min_length=MIN_LENGTH, max_length=MAX_LENGTH)
 
 
 @auth_bp.route("/logout", methods=["POST"])

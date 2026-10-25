@@ -2,12 +2,14 @@
 {% block title %}Đăng nhập - Hệ thống Quản lý API Key An toàn{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-md-5 col-lg-4">
+<div class="auth-wrap">
+<div class="row justify-content-center w-100 mx-0">
+    <div class="col-sm-10 col-md-6 col-lg-5 col-xl-4">
         <div class="card card-cyber">
-            <div class="card-cyber-header text-center py-3">
-                <h5 class="mb-1 text-info"><i class="bi bi-shield-lock-fill me-2"></i>Xác thực Quản trị viên</h5>
-                <small class="text-secondary">Mật khẩu được bảo vệ bằng thuật toán <strong>Argon2id</strong></small>
+            <div class="text-center pt-4 px-4">
+                <span class="auth-icon mb-3"><i class="bi bi-shield-lock-fill"></i></span>
+                <h5 class="mb-1 fw-bold text-body-emphasis">Xác thực Quản trị viên</h5>
+                <small class="text-secondary">Mật khẩu được bảo vệ bằng thuật toán <strong>PBKDF2-HMAC-SHA256</strong> (NIST SP 800-132)</small>
             </div>
             <div class="card-body p-4">
                 <form method="POST" action="{{ url_for('auth.login') }}">
@@ -20,17 +22,15 @@
                         <label class="form-label small text-secondary">Mật khẩu</label>
                         <input type="password" name="password" class="form-control form-control-cyber" value="{% if config.DEMO_MODE %}{{ config.DEMO_ADMIN_PASSWORD or '' }}{% endif %}" required>
                     </div>
-                    <button type="submit" class="btn btn-info w-100 fw-semibold text-dark">
+                    <button type="submit" class="btn btn-info w-100 fw-semibold text-dark py-2">
                         <i class="bi bi-unlock-fill me-1"></i>Đăng nhập Hệ thống
                     </button>
                 </form>
 
                 {% if config.DEMO_MODE %}
-                <hr class="border-secondary my-4">
-
-                <div class="small text-secondary mb-2 text-center">
-                    <i class="bi bi-lightning-charge-fill text-warning"></i>
-                    <strong>Đăng nhập nhanh 1-Click (Dành cho Demo Đồ án):</strong>
+                <div class="auth-divider my-4">
+                    <span><i class="bi bi-lightning-charge-fill text-warning"></i>
+                    <strong>Đăng nhập nhanh 1-Click (Dành cho Demo Đồ án):</strong></span>
                 </div>
                 <div class="d-grid gap-2">
                     <form method="POST" action="{{ url_for('auth.quick_login', username='admin') }}">
@@ -41,7 +41,7 @@
                     </form>
                     <form method="POST" action="{{ url_for('auth.quick_login', username='dev_hoang') }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-light w-100">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
                             <i class="bi bi-code-slash me-1"></i>Vào ngay tài khoản <strong>dev_hoang</strong>
                         </button>
                     </form>
@@ -56,5 +56,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

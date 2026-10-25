@@ -1,133 +1,464 @@
-:root {
-    --bg-dark: #0b1120;
-    --bg-card: #131c31;
-    --bg-card-hover: #1a2642;
-    --border-color: #233252;
-    --text-main: #e2e8f0;
-    --text-muted: #94a3b8;
-    --accent-blue: #38bdf8;
-    --accent-indigo: #6366f1;
-    --accent-green: #10b981;
-    --accent-amber: #f59e0b;
-    --accent-red: #ef4444;
-    --accent-purple: #a855f7;
+/* =========================================================================
+   SEC-GATEWAY UI — Hệ thống thiết kế 2 chế độ màu (Sáng / Tối)
+   Chế độ được điều khiển bằng thuộc tính data-bs-theme trên thẻ <html>
+   (Bootstrap 5.3 Color Modes) và lưu lựa chọn trong localStorage.
+   ========================================================================= */
+
+/* ---------- 1. Design tokens: Chế độ SÁNG ---------- */
+:root,
+[data-bs-theme="light"] {
+    --app-bg: #f3f5f9;
+    --app-bg-glow: radial-gradient(1200px 500px at 85% -10%, rgba(8, 145, 178, 0.10), transparent 60%),
+                   radial-gradient(900px 400px at -10% 0%, rgba(99, 102, 241, 0.08), transparent 60%);
+    --app-surface: #ffffff;
+    --app-surface-2: #f8fafc;
+    --app-surface-hover: #f1f5f9;
+    --app-border: #e2e8f0;
+    --app-border-strong: #cbd5e1;
+    --app-text: #0f172a;
+    --app-muted: #5b6577;
+    --app-accent: #0891b2;
+    --app-accent-soft: rgba(8, 145, 178, 0.10);
+    --app-nav-bg: rgba(255, 255, 255, 0.82);
+    --app-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 20px rgba(15, 23, 42, 0.06);
+    --app-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
+    --app-input-bg: #ffffff;
+    --app-code-bg: #f1f5f9;
+    --app-hash-text: #0e7490;
+
+    --app-info: #0e7490;
+    --app-success: #047857;
+    --app-warning: #b45309;
+    --app-danger: #b91c1c;
+
+    /* Ghi đè biến của Bootstrap để mọi component đồng bộ */
+    --bs-body-bg: var(--app-bg);
+    --bs-body-color: var(--app-text);
+    --bs-emphasis-color: #020617;
+    --bs-emphasis-color-rgb: 2, 6, 23;
+    --bs-secondary-color: var(--app-muted);
+    --bs-border-color: var(--app-border);
+    --bs-tertiary-bg: var(--app-surface-2);
+    --bs-code-color: #be185d;
+    --bs-link-color: var(--app-accent);
+    --bs-link-color-rgb: 8, 145, 178;
+    --bs-link-hover-color: #0e7490;
+    --bs-link-hover-color-rgb: 14, 116, 144;
+    color-scheme: light;
 }
 
+/* ---------- 2. Design tokens: Chế độ TỐI ---------- */
+[data-bs-theme="dark"] {
+    --app-bg: #0a0f1c;
+    --app-bg-glow: radial-gradient(1200px 500px at 85% -10%, rgba(56, 189, 248, 0.10), transparent 60%),
+                   radial-gradient(900px 400px at -10% 0%, rgba(99, 102, 241, 0.10), transparent 60%);
+    --app-surface: #111827;
+    --app-surface-2: #0d1424;
+    --app-surface-hover: #172036;
+    --app-border: #1f2a40;
+    --app-border-strong: #2c3b58;
+    --app-text: #e2e8f0;
+    --app-muted: #94a3b8;
+    --app-accent: #38bdf8;
+    --app-accent-soft: rgba(56, 189, 248, 0.12);
+    --app-nav-bg: rgba(10, 15, 28, 0.80);
+    --app-shadow: 0 1px 2px rgba(0, 0, 0, 0.30), 0 8px 24px rgba(0, 0, 0, 0.28);
+    --app-shadow-lg: 0 14px 36px rgba(0, 0, 0, 0.45);
+    --app-input-bg: #0b1222;
+    --app-code-bg: #0b1222;
+    --app-hash-text: #38bdf8;
+
+    --app-info: #38bdf8;
+    --app-success: #34d399;
+    --app-warning: #fbbf24;
+    --app-danger: #f87171;
+
+    --bs-body-bg: var(--app-bg);
+    --bs-body-color: var(--app-text);
+    --bs-emphasis-color: #f8fafc;
+    --bs-emphasis-color-rgb: 248, 250, 252;
+    --bs-secondary-color: var(--app-muted);
+    --bs-border-color: var(--app-border);
+    --bs-tertiary-bg: var(--app-surface-2);
+    --bs-code-color: #f472b6;
+    --bs-link-color: var(--app-accent);
+    --bs-link-color-rgb: 56, 189, 248;
+    --bs-link-hover-color: #7dd3fc;
+    --bs-link-hover-color-rgb: 125, 211, 252;
+    color-scheme: dark;
+}
+
+/* ---------- 3. Nền tảng ---------- */
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-main);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--app-bg);
+    background-image: var(--app-bg-glow);
+    background-attachment: fixed;
+    color: var(--app-text);
+    font-family: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv11", "ss01";
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
 }
 
+/* Chuyển màu mượt khi đổi chế độ (chỉ bật sau khi trang đã tải) */
+html.theme-ready body,
+html.theme-ready .card-cyber,
+html.theme-ready .stat-card,
+html.theme-ready .navbar-cyber,
+html.theme-ready .scenario-btn,
+html.theme-ready .form-control-cyber,
+html.theme-ready .form-select-cyber {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+::selection { background: var(--app-accent-soft); }
+
+/* Utility màu chữ: tăng tương phản trong chế độ sáng (WCAG AA) */
+.text-info { color: var(--app-info) !important; }
+.text-success { color: var(--app-success) !important; }
+.text-warning { color: var(--app-warning) !important; }
+.text-danger { color: var(--app-danger) !important; }
+.text-secondary { color: var(--app-muted) !important; }
+
+/* Nút viền: dùng màu đậm hơn trong chế độ sáng để đọc rõ trên nền trắng */
+[data-bs-theme="light"] .btn-outline-info {
+    --bs-btn-color: #0e7490; --bs-btn-border-color: #67c5d9;
+    --bs-btn-hover-bg: #0e7490; --bs-btn-hover-border-color: #0e7490; --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #0e7490; --bs-btn-active-color: #fff;
+}
+[data-bs-theme="light"] .btn-outline-warning {
+    --bs-btn-color: #b45309; --bs-btn-border-color: #f2b45c;
+    --bs-btn-hover-bg: #d97706; --bs-btn-hover-border-color: #d97706; --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: #b45309; --bs-btn-active-color: #fff;
+}
+[data-bs-theme="light"] .btn-outline-success {
+    --bs-btn-color: #047857; --bs-btn-border-color: #6cc7a3;
+}
+[data-bs-theme="light"] .btn-outline-danger {
+    --bs-btn-color: #b91c1c; --bs-btn-border-color: #f0a3a3;
+}
+
+.btn { border-radius: 8px; font-weight: 500; }
+.btn-sm { border-radius: 7px; }
+.badge { font-weight: 600; letter-spacing: 0.01em; }
+
+/* ---------- 4. Thanh điều hướng ---------- */
 .navbar-cyber {
-    background: rgba(19, 28, 49, 0.95);
-    border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(8px);
+    background: var(--app-nav-bg);
+    border-bottom: 1px solid var(--app-border);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
 }
 
+.brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-grid;
+    place-items: center;
+    background: linear-gradient(135deg, #06b6d4, #6366f1);
+    color: #fff;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+}
+
+.brand-text { line-height: 1.1; }
+.brand-text .brand-title { font-size: 0.98rem; font-weight: 700; color: var(--bs-emphasis-color); }
+.brand-text .brand-sub {
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--app-accent);
+}
+
+.navbar-cyber .nav-link {
+    color: var(--app-muted);
+    border-radius: 8px;
+    padding: 0.45rem 0.8rem !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.navbar-cyber .nav-link, .navbar-cyber .btn, .user-chip { white-space: nowrap; }
+/* Màn hình vừa: thu gọn tên thương hiệu để menu không bị xuống dòng */
+@media (min-width: 1200px) and (max-width: 1599.98px) {
+    .navbar-cyber .brand-title { display: none; }
+    .navbar-cyber .brand-sub { font-size: 0.82rem; }
+    .navbar-cyber .collapse-label { display: none; }
+    .navbar-cyber .nav-link { padding: 0.45rem 0.6rem !important; font-size: 0.86rem; }
+}
+@media (max-width: 575.98px) {
+    .navbar-cyber .brand-title { display: none; }
+    .navbar-cyber .brand-sub { font-size: 0.82rem; }
+}
+.navbar-cyber .nav-link:hover { color: var(--app-text); background: var(--app-surface-hover); }
+.navbar-cyber .nav-link.active {
+    color: var(--app-accent) !important;
+    background: var(--app-accent-soft);
+}
+
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background: var(--app-surface);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--app-text);
+}
+.user-chip .avatar {
+    width: 24px; height: 24px; border-radius: 50%;
+    display: inline-grid; place-items: center;
+    background: var(--app-accent-soft); color: var(--app-accent); font-size: 0.8rem;
+}
+.user-chip .role { color: var(--app-accent); font-size: 0.72rem; letter-spacing: 0.06em; }
+
+/* Nút chuyển chế độ Sáng / Tối */
+.theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    color: var(--app-text);
+    padding: 0;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.theme-toggle:hover { border-color: var(--app-accent); color: var(--app-accent); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-toggle:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 2px; }
+.theme-toggle .bi-sun-fill { display: none; }
+[data-bs-theme="dark"] .theme-toggle .bi-sun-fill { display: inline-block; }
+[data-bs-theme="dark"] .theme-toggle .bi-moon-stars-fill { display: none; }
+
+/* ---------- 5. Tiêu đề trang ---------- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.page-eyebrow {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--app-accent); margin-bottom: 0.25rem;
+}
+.page-title { font-size: 1.4rem; font-weight: 700; color: var(--bs-emphasis-color); margin: 0; }
+
+/* ---------- 6. Card ---------- */
 .card-cyber {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    color: var(--text-main);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    background-color: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: 14px;
+    color: var(--app-text);
+    box-shadow: var(--app-shadow);
+    overflow: hidden;
 }
 
 .card-cyber-header {
-    background-color: rgba(15, 23, 42, 0.65);
-    border-bottom: 1px solid var(--border-color);
-    padding: 0.9rem 1.25rem;
+    background-color: var(--app-surface-2);
+    border-bottom: 1px solid var(--app-border);
+    padding: 0.85rem 1.25rem;
     font-weight: 600;
+    font-size: 0.95rem;
 }
 
+.list-group-item { border-color: var(--app-border) !important; color: var(--app-text); }
+
+/* ---------- 7. Thẻ thống kê ---------- */
 .stat-card {
-    background: linear-gradient(145deg, #131c31 0%, #0f172a 100%);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1.15rem;
+    position: relative;
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: 14px;
+    padding: 1.1rem 1.15rem 1rem;
+    box-shadow: var(--app-shadow);
+    height: 100%;
+    overflow: hidden;
 }
+.stat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--stat-accent, var(--app-accent));
+}
+.stat-card .fs-3 { letter-spacing: -0.02em; }
+.stat-card.stat-info    { --stat-accent: var(--app-info); }
+.stat-card.stat-success { --stat-accent: var(--app-success); }
+.stat-card.stat-danger  { --stat-accent: var(--app-danger); }
+.stat-card.stat-warning { --stat-accent: var(--app-warning); }
+.stat-card.stat-neutral { --stat-accent: #6366f1; }
 
+/* ---------- 8. Mã, hash, chip ---------- */
 .code-mono {
-    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
-    font-size: 0.85rem;
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 0.84rem;
 }
 
 .hash-box {
-    background-color: #090d16;
-    border: 1px solid #1e293b;
-    border-radius: 6px;
+    background-color: var(--app-code-bg);
+    border: 1px solid var(--app-border);
+    border-radius: 7px;
     padding: 0.35rem 0.6rem;
-    color: #38bdf8;
-    font-family: Consolas, monospace;
-    font-size: 0.78rem;
+    color: var(--app-hash-text);
+    font-family: 'JetBrains Mono Variable', Consolas, monospace;
+    font-size: 0.76rem;
     word-break: break-all;
 }
 
+.badge-chip {
+    background-color: var(--app-surface-2) !important;
+    border: 1px solid var(--app-border-strong);
+    color: var(--app-muted);
+    font-weight: 600;
+}
+.badge-chip-info { border-color: color-mix(in srgb, var(--app-info) 45%, transparent); color: var(--app-info); background-color: var(--app-accent-soft) !important; }
+.badge-chip-success { border-color: color-mix(in srgb, var(--app-success) 45%, transparent); color: var(--app-success); }
+
 .show-once-banner {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(56, 189, 248, 0.12));
-    border: 2px solid #10b981;
-    border-radius: 12px;
-    padding: 1.25rem;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(56, 189, 248, 0.10)), var(--app-surface);
+    border: 1px solid color-mix(in srgb, var(--app-success) 55%, transparent);
+    border-left: 4px solid var(--app-success);
+    border-radius: 14px;
+    padding: 1.25rem 1.4rem;
 }
 
+/* Ô chọn Scope trong form cấp phát */
+.scope-option {
+    border: 1px solid var(--app-border);
+    border-radius: 10px;
+    background: var(--app-surface-2);
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.scope-option:hover { border-color: var(--app-border-strong); }
+.scope-option:has(.form-check-input:checked) {
+    border-color: color-mix(in srgb, var(--app-accent) 55%, transparent);
+    background: var(--app-accent-soft);
+}
+
+/* ---------- 9. Bảng ---------- */
 .table-cyber {
-    color: var(--text-main);
-    border-color: var(--border-color);
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--app-text);
+    --bs-table-hover-bg: var(--app-surface-hover);
+    --bs-table-hover-color: var(--app-text);
+    --bs-table-border-color: var(--app-border);
+    color: var(--app-text);
+    border-color: var(--app-border);
 }
 
 .table-cyber thead th {
-    background-color: #0f172a;
-    color: #94a3b8;
-    font-size: 0.78rem;
+    background-color: var(--app-surface-2);
+    color: var(--app-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid var(--border-color);
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--app-border);
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    white-space: nowrap;
 }
 
 .table-cyber tbody td {
-    border-color: var(--border-color);
+    border-color: var(--app-border);
     vertical-align: middle;
 }
+.table-cyber tbody td:first-child { min-width: 220px; }
 
+/* ---------- 10. Form ---------- */
 .form-control-cyber, .form-select-cyber {
-    background-color: #090d16;
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
+    background-color: var(--app-input-bg);
+    border: 1px solid var(--app-border-strong);
+    border-radius: 8px;
+    color: var(--app-text);
 }
+
+.form-control-cyber::placeholder { color: var(--app-muted); opacity: 0.75; }
 
 .form-control-cyber:focus, .form-select-cyber:focus {
-    background-color: #090d16;
-    border-color: var(--accent-blue);
-    color: #fff;
-    box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.2);
+    background-color: var(--app-input-bg);
+    border-color: var(--app-accent);
+    color: var(--app-text);
+    box-shadow: 0 0 0 0.2rem var(--app-accent-soft);
 }
 
+.form-control-cyber[readonly] { background-color: var(--app-code-bg); }
+
+/* ---------- 11. Playground ---------- */
 .scenario-btn {
+    position: relative;
     text-align: left;
-    background-color: #0f172a;
-    border: 1px solid var(--border-color);
-    color: var(--text-main);
+    background-color: var(--app-surface-2);
+    border: 1px solid var(--app-border);
+    border-left: 3px solid var(--scenario-accent, var(--app-border-strong));
+    color: var(--app-text);
     border-radius: 10px;
     padding: 0.75rem 0.95rem;
     transition: all 0.15s ease-in-out;
 }
 
 .scenario-btn:hover {
-    background-color: var(--bg-card-hover);
-    border-color: var(--accent-blue);
+    background-color: var(--app-surface-hover);
+    border-color: var(--app-accent);
+    border-left-color: var(--scenario-accent, var(--app-accent));
     transform: translateY(-1px);
+    box-shadow: var(--app-shadow);
+}
+.scenario-btn > .d-flex { gap: 0.5rem; }
+.scenario-btn .badge { align-self: flex-start; flex-shrink: 0; }
+.scenario-btn:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 2px; }
+.scenario-btn:has(.text-success) { --scenario-accent: var(--app-success); }
+.scenario-btn:has(.text-info) { --scenario-accent: var(--app-info); }
+.scenario-btn:has(.text-warning) { --scenario-accent: var(--app-warning); }
+.scenario-btn:has(.text-danger) { --scenario-accent: var(--app-danger); }
+
+.scenario-group {
+    border: 1px solid var(--app-border);
+    border-left: 3px solid #6366f1;
+    border-radius: 10px;
+    background: var(--app-surface-2);
 }
 
+/* Màn hình terminal luôn tối ở cả 2 chế độ để giữ cảm giác console */
 .terminal-box {
-    background-color: #060911;
+    background-color: #070b14;
     border: 1px solid #1e293b;
     border-radius: 10px;
     padding: 1rem;
-    font-family: Consolas, 'Courier New', monospace;
-    font-size: 0.84rem;
+    font-family: 'JetBrains Mono Variable', Consolas, 'Courier New', monospace;
+    font-size: 0.82rem;
+    line-height: 1.55;
     max-height: 520px;
     overflow-y: auto;
     white-space: pre-wrap;
     color: #cbd5e1;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
+
+/* ---------- 12. Trang xác thực ---------- */
+.auth-wrap { min-height: calc(100vh - 140px); display: flex; align-items: center; }
+.auth-icon {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: inline-grid; place-items: center; font-size: 1.4rem;
+    background: var(--app-accent-soft); color: var(--app-accent);
+}
+.auth-divider {
+    display: flex; align-items: center; gap: 0.75rem;
+    color: var(--app-muted); font-size: 0.8rem;
+}
+.auth-divider > span { text-align: center; flex: 0 1 auto; }
+.auth-divider::before, .auth-divider::after { min-width: 14px; }
+.auth-divider::before, .auth-divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--app-border);
+}
+
+/* Thanh cuộn */
+* { scrollbar-color: var(--app-border-strong) transparent; }

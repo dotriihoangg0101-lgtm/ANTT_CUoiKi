@@ -21,10 +21,10 @@ def client():
 
 
 def test_cryptographic_storage_in_database(client):
-    """Kiểm chứng Argon2id, HMAC-SHA256 và Fernet trong Database (Không lưu lộ Plaintext)."""
+    """Kiểm chứng PBKDF2-HMAC-SHA256, HMAC-SHA256 và Fernet trong Database (Không lưu lộ Plaintext)."""
     admin = User.query.filter_by(username="admin").first()
     assert admin is not None
-    assert admin.password_hash.startswith("$argon2id$")
+    assert admin.password_hash.startswith("$pbkdf2-sha256$")
     assert "Admin@123456" not in admin.password_hash
     assert admin.check_password("Admin@123456") is True
 

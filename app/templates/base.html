@@ -4,32 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Secure API Key Manager - HUTECH ATTT{% endblock %}</title>
+    <script>
+        // Đặt chế độ màu trước khi vẽ trang để không bị nháy (lựa chọn đã lưu > cài đặt hệ điều hành)
+        (function () {
+            var theme = null;
+            try { theme = localStorage.getItem("secgw-theme"); } catch (e) {}
+            if (theme !== "light" && theme !== "dark") {
+                theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+            }
+            document.documentElement.setAttribute("data-bs-theme", theme);
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.0.16/index.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.0.19/index.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-cyber sticky-top mb-4">
+    <nav class="navbar navbar-expand-xl navbar-cyber sticky-top mb-4">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('dashboard.index') }}">
-                <span class="badge bg-info text-dark"><i class="bi bi-shield-lock-fill"></i> SEC-GATEWAY</span>
-                <span>Quản lý & Kiểm soát API Key An toàn</span>
+            <a class="navbar-brand d-flex align-items-center gap-2 me-xl-4" href="{{ url_for('dashboard.index') }}">
+                <span class="brand-mark"><i class="bi bi-shield-lock-fill"></i></span>
+                <span class="brand-text d-flex flex-column">
+                    <span class="brand-sub">SEC-GATEWAY</span>
+                    <span class="brand-title">Quản lý & Kiểm soát API Key An toàn</span>
+                </span>
             </a>
             {% if current_user.is_authenticated %}
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <div class="d-flex align-items-center gap-2 order-xl-last ms-auto ms-xl-0">
+                <button type="button" class="theme-toggle d-xl-none" data-theme-toggle aria-label="Chuyển chế độ sáng / tối">
+                    <i class="bi bi-moon-stars-fill"></i><i class="bi bi-sun-fill"></i>
+                </button>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                        aria-controls="mainNav" aria-expanded="false" aria-label="Mở menu điều hướng">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
             <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3 gap-1">
+                <ul class="navbar-nav me-auto mb-2 mb-xl-0 gap-1">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active fw-semibold text-info{% endif %}"
+                        <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
                            href="{{ url_for('dashboard.index') }}">
                             <i class="bi bi-key-fill me-1"></i>Quản lý API Key
                         </a>
                     </li>
                     {% if demo_mode %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard.playground' %}active fw-semibold text-warning{% endif %}"
+                        <a class="nav-link {% if request.endpoint == 'dashboard.playground' %}active{% endif %}"
                            href="{{ url_for('dashboard.playground') }}">
                             <i class="bi bi-terminal-plus me-1"></i>8 Ngữ cảnh Demo & Tấn công
                         </a>
@@ -37,7 +59,7 @@
                     {% endif %}
                     {% if demo_mode and current_user.is_authenticated and current_user.is_admin %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard.db_inspector' %}active fw-semibold text-success{% endif %}"
+                        <a class="nav-link {% if request.endpoint == 'dashboard.db_inspector' %}active{% endif %}"
                            href="{{ url_for('dashboard.db_inspector') }}">
                             <i class="bi bi-database-fill-check me-1"></i>Soi Database (Hashes)
                         </a>
@@ -45,35 +67,43 @@
                     {% endif %}
                     {% if current_user.is_authenticated and current_user.is_admin %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard.logs' %}active fw-semibold text-light{% endif %}"
+                        <a class="nav-link {% if request.endpoint == 'dashboard.logs' %}active{% endif %}"
                            href="{{ url_for('dashboard.logs') }}">
                             <i class="bi bi-journal-code me-1"></i>Audit & Usage Logs
                         </a>
                     </li>
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center flex-wrap flex-xl-nowrap gap-2 pb-2 pb-xl-0">
                     {% if demo_mode and current_user.is_authenticated and current_user.is_admin %}
                     <form method="POST" action="{{ url_for('dashboard.reset_demo') }}" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-sm btn-outline-warning"
                                 title="Khôi phục lại toàn bộ 8 kịch bản mẫu về trạng thái ban đầu">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset 8 Kịch bản Demo
+                            <i class="bi bi-arrow-counterclockwise"></i><span class="collapse-label"> Reset 8 Kịch bản Demo</span>
                         </button>
                     </form>
                     {% endif %}
-                    <span class="badge bg-secondary py-2 px-3">
-                        <i class="bi bi-person-check-fill me-1"></i>{{ current_user.username }}
-                        <span class="text-info">({{ current_user.role|upper }})</span>
+                    <span class="user-chip">
+                        <span class="avatar"><i class="bi bi-person-fill"></i></span>
+                        {{ current_user.username }}
+                        <span class="role">{{ current_user.role|upper }}</span>
                     </span>
+                    <button type="button" class="theme-toggle d-none d-xl-inline-flex" data-theme-toggle aria-label="Chuyển chế độ sáng / tối">
+                        <i class="bi bi-moon-stars-fill"></i><i class="bi bi-sun-fill"></i>
+                    </button>
                     <form method="POST" action="{{ url_for('auth.logout') }}" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Đăng xuất" aria-label="Đăng xuất">
                             <i class="bi bi-box-arrow-right"></i>
                         </button>
                     </form>
                 </div>
             </div>
+            {% else %}
+            <button type="button" class="theme-toggle ms-auto" data-theme-toggle aria-label="Chuyển chế độ sáng / tối">
+                <i class="bi bi-moon-stars-fill"></i><i class="bi bi-sun-fill"></i>
+            </button>
             {% endif %}
         </div>
     </nav>
@@ -94,6 +124,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

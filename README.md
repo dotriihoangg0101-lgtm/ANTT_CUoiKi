@@ -5,8 +5,12 @@
 
 ## 1. Kiến Trúc Bảo Mật Đã Triển Khai
 
-1. **Bảo vệ Mật khẩu Quản trị viên & Người dùng (`Argon2id`)**:
-   - Sử dụng `argon2-cffi` (`time_cost=2, memory_cost=32MB, parallelism=2`).
+> Chuẩn áp dụng và giải thích chi tiết từng thuật toán: xem [KIEN_THUC_AP_DUNG.md](KIEN_THUC_AP_DUNG.md).
+
+1. **Bảo vệ Mật khẩu Quản trị viên & Người dùng (`PBKDF2-HMAC-SHA256`, NIST SP 800-132 & SP 800-63B-4)**:
+   - Băm bằng `hashlib.pbkdf2_hmac("sha256")`, **600.000 vòng**, salt ngẫu nhiên **128 bit**, đầu ra 256 bit; định dạng lưu `$pbkdf2-sha256$<vòng>$<salt>$<hash>`.
+   - Chính sách mật khẩu theo **NIST SP 800-63B-4 (08/2025)**: tối thiểu **15 ký tự**, tối đa 128, kiểm tra danh sách mật khẩu phổ biến và từ theo ngữ cảnh, **không** bắt buộc chữ hoa/số/ký tự đặc biệt (`app/services/password_policy.py`).
+   - Hash Argon2id cũ vẫn đăng nhập được và tự động băm lại sang PBKDF2 ở lần đăng nhập thành công kế tiếp.
    - Phân quyền chặt chẽ (**RBAC / Chống IDOR**): Tài khoản `developer` chỉ được xem và thao tác trên các API Key của chính mình, không được tự cấp các scope nhạy cảm (`admin:records`, `transfer:funds`). Các trang `/db-inspector`, `/logs`, `/dashboard/reset-demo` yêu cầu quyền `admin` (`@admin_required`).
 2. **Cấp phát & Lưu trữ API Key Không lộ Plaintext (`CSPRNG + HMAC-SHA256 + Pepper`)**:
    - Sinh khóa bằng `secrets.token_urlsafe(24)` (**24 byte entropy → 32 ký tự URL-safe**) kết hợp với prefix theo định dạng 4 phần: `ak_<live|test>_<8_ky_tu_id>_<32_chars_secret>`.
@@ -17,6 +21,7 @@
    - Kiểm tra nghiêm ngặt các biến môi trường bí mật (`SECRET_KEY`, `API_KEY_PEPPER`, `MASTER_ENCRYPTION_KEY`) qua `validate_secrets(app)` ngay khi khởi động: từ chối chạy nếu thiếu, rỗng, ngắn hơn 32 ký tự hoặc dùng lại giá trị mẫu trong `.env.example`.
 3. **Mã hóa Dữ liệu Nhạy cảm trên Đĩa (`Fernet AES-128-CBC + HMAC-SHA256`)**:
    - Cột `signing_secret_enc` (trong bảng `api_keys`) và cột `encrypted_secret_note` (trong bảng `vault_records`, đi kèm `account_number_masked`) được mã hóa đối xứng bằng `cryptography.fernet.Fernet`.
+   - Khóa Fernet 256 bit được dẫn xuất từ `MASTER_ENCRYPTION_KEY` bằng **HKDF-SHA256** (RFC 5869, NIST SP 800-56C Rev.2). Dùng `MultiFernet` nên dữ liệu mã hóa bằng khóa kiểu cũ vẫn giải mã được.
 4. **Middleware Kiểm Soát Truy Cập 6 Lớp (`@require_api_key`)**:
    - **Chốt chặn 0 (CWE-598)**: Cấm truyền API Key trên URL Query String (`?api_key=...`), trả về `400` với `error_code = "API_KEY_IN_URL_FORBIDDEN"`.
    - **Lớp 1**: Xác thực cấu trúc 4 phần & đối chiếu mã băm `HMAC-SHA256` hằng thời gian (`hmac.compare_digest`). Sai secret không được đếm vào `failed_attempts` (nhằm chống tấn công DoS khóa key thông qua prefix công khai); brute-force secret được chặn bởi Rate Limit `120 per minute` theo IP trên toàn bộ `/api/v1`.

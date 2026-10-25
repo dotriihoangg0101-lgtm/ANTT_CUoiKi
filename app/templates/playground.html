@@ -2,11 +2,12 @@
 {% block title %}Phòng Thí Nghiệm 8 Ngữ Cảnh Bảo Mật API Key - HUTECH ATTT{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+<div class="page-header">
     <div>
-        <h4 class="mb-0 text-warning fw-bold">
-            <i class="bi bi-terminal-plus me-2"></i>Phòng Thí Nghiệm 8 Ngữ Cảnh Bảo Mật & Mô Phỏng Tấn Công
-        </h4>
+        <div class="page-eyebrow"><i class="bi bi-terminal-plus me-1"></i>Playground</div>
+        <h1 class="page-title">
+            Phòng Thí Nghiệm 8 Ngữ Cảnh Bảo Mật & Mô Phỏng Tấn Công
+        </h1>
         <small class="text-secondary">
             Bấm trực tiếp vào từng tình huống bên dưới để kiểm chứng 6 Lớp Phòng Thủ Middleware và Database thực tế (không cần mở Postman).
         </small>
@@ -37,7 +38,7 @@
 
                 <!-- Ngữ cảnh 2 -->
                 <div class="row g-2">
-                    <div class="col-7">
+                    <div class="col-sm-7">
                         <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario2Deny()">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-danger">2A. Vi phạm Phân quyền Scope</strong>
@@ -48,7 +49,7 @@
                             </div>
                         </button>
                     </div>
-                    <div class="col-5">
+                    <div class="col-sm-5">
                         <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario2Allow()">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-info">2B. Tạo Bản ghi DB</strong>
@@ -74,7 +75,7 @@
 
                 <!-- Ngữ cảnh 4 -->
                 <div class="row g-2">
-                    <div class="col-6">
+                    <div class="col-sm-6">
                         <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario4Expired()">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-warning">4A. Key Hết hạn (TTL)</strong>
@@ -85,7 +86,7 @@
                             </div>
                         </button>
                     </div>
-                    <div class="col-6">
+                    <div class="col-sm-6">
                         <button type="button" class="scenario-btn w-100 h-100" onclick="runScenario4Revoked()">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-danger">4B. Key Đã Thu hồi</strong>
@@ -132,7 +133,7 @@
                 </button>
 
                 <!-- Ngữ cảnh 8 -->
-                <div class="p-2 rounded border border-secondary bg-dark bg-opacity-50">
+                <div class="p-2 scenario-group">
                     <div class="small fw-bold text-info mb-2">
                         <i class="bi bi-pen-fill me-1"></i>8. Chữ ký số HMAC-SHA256 & Chống Replay / Sửa dữ liệu (API Chuyển tiền):
                     </div>
@@ -221,7 +222,7 @@
         <!-- Kết quả phản hồi -->
         <div class="card card-cyber">
             <div class="card-cyber-header d-flex justify-content-between align-items-center">
-                <span id="scenarioTitleLabel" class="text-white">
+                <span id="scenarioTitleLabel" class="text-body-emphasis">
                     <i class="bi bi-cpu-fill me-2 text-success"></i>Kết quả Kiểm tra Bảo mật & Phản hồi từ Server
                 </span>
                 <span id="httpStatusBadge" class="badge bg-secondary">Sẵn sàng</span>
@@ -266,7 +267,7 @@ function renderResponse(title, status, headersObj, dataObj) {
     for (const h of interestingHeaders) {
         if (headersObj[h]) {
             const pill = document.createElement("span");
-            pill.className = "badge bg-dark border border-info text-info code-mono";
+            pill.className = "badge badge-chip badge-chip-info code-mono";
             pill.textContent = `${h}: ${headersObj[h]}`;
             hBar.appendChild(pill);
         }

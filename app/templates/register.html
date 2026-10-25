@@ -2,12 +2,14 @@
 {% block title %}Đăng ký Tài khoản Developer - HUTECH ATTT{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-md-5 col-lg-4">
+<div class="auth-wrap">
+<div class="row justify-content-center w-100 mx-0">
+    <div class="col-sm-10 col-md-6 col-lg-5 col-xl-4">
         <div class="card card-cyber">
-            <div class="card-cyber-header text-center py-3">
-                <h5 class="mb-1 text-info"><i class="bi bi-person-plus-fill me-2"></i>Đăng ký Developer</h5>
-                <small class="text-secondary">Mật khẩu tự động băm bằng <strong>Argon2id (m=32MB, t=2, p=2)</strong></small>
+            <div class="text-center pt-4 px-4">
+                <span class="auth-icon mb-3"><i class="bi bi-person-plus-fill"></i></span>
+                <h5 class="mb-1 fw-bold text-body-emphasis">Đăng ký Developer</h5>
+                <small class="text-secondary">Mật khẩu tự động băm bằng <strong>PBKDF2-HMAC-SHA256 (600.000 vòng, salt 128 bit)</strong></small>
             </div>
             <div class="card-body p-4">
                 <form method="POST" action="{{ url_for('auth.register') }}">
@@ -21,10 +23,12 @@
                         <input type="email" name="email" class="form-control form-control-cyber" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small text-secondary">Mật khẩu (tối thiểu 8 ký tự)</label>
-                        <input type="password" name="password" class="form-control form-control-cyber" required>
+                        <label class="form-label small text-secondary">Mật khẩu (tối thiểu {{ min_length }} ký tự)</label>
+                        <input type="password" name="password" class="form-control form-control-cyber"
+                               minlength="{{ min_length }}" maxlength="{{ max_length }}" autocomplete="new-password" required>
+                        <div class="form-text small">Theo NIST SP 800-63B-4: dùng cụm từ dài dễ nhớ, không bắt buộc chữ hoa, số hay ký tự đặc biệt. Mật khẩu phổ biến hoặc chứa username sẽ bị từ chối.</div>
                     </div>
-                    <button type="submit" class="btn btn-success w-100 fw-semibold">
+                    <button type="submit" class="btn btn-success w-100 fw-semibold py-2">
                         <i class="bi bi-check2-circle me-1"></i>Tạo tài khoản an toàn
                     </button>
                 </form>
@@ -34,5 +38,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

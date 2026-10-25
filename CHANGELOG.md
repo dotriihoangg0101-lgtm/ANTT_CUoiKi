@@ -5,13 +5,14 @@ Không chứa bất kỳ giá trị bí mật nào.
 
 ---
 
-## Tổng quan 3 vòng
+## Tổng quan 4 vòng
 
 | Vòng | Ai sửa | Nội dung chính |
 |---|---|---|
 | 1 | Gemini | Đóng các lỗ hổng nghiêm trọng: đăng nhập nhanh không cần mật khẩu, không phân quyền dashboard (IDOR), bypass IP whitelist qua header, secret mặc định viết cứng, không chống replay trong 300s, endpoint ký HMAC hộ bằng secret thật, logic chuyển tiền (số tiền âm), tự cấp scope / TTL vô hạn, unlock "hồi sinh" key đã thu hồi. Thêm cờ `DEMO_MODE` để bọc tính năng demo thay vì xóa |
 | 2 | Gemini | Sửa phần làm sai/thiếu của vòng 1: sai secret làm đóng băng key người khác (DoS chỉ cần prefix), `X-Simulated-IP` nhận từ mọi IP, rotate key với ân hạn khổng lồ / lỗi 500, lộ audit log cho developer, lỗi 500 do sai kiểu dữ liệu, ẩn nút/link theo quyền & trạng thái, xóa secret bị chép nhầm vào tài liệu |
 | 3 | Claude | Lỗi 429/401 của API trả JSON; bỏ API cũ `get_or_404`; **gom mọi bí mật vào một file `.env`** (thêm `scripts/tao_env.py`); hướng dẫn chạy; dọn file thừa |
+| 4 | Claude | Chuẩn hóa theo NIST: băm mật khẩu PBKDF2-HMAC-SHA256 600.000 vòng (SP 800-132, có rehash hash Argon2 cũ), chính sách mật khẩu SP 800-63B-4 (tối thiểu 15 ký tự, blocklist, không quy tắc thành phần), dẫn xuất khóa Fernet bằng HKDF (SP 800-56C Rev.2, MultiFernet giữ dữ liệu cũ); giao diện sáng/tối; thêm `KIEN_THUC_AP_DUNG.md` |
 
 Mọi lỗ hổng mức Nghiêm trọng / Cao phát hiện qua 3 vòng đều đã được kiểm chứng bằng PoC là **đã đóng**, ở cả `DEMO_MODE=0` và `DEMO_MODE=1`.
 

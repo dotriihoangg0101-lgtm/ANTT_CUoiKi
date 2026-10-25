@@ -9,7 +9,7 @@ def utc_now():
 
 
 class User(UserMixin, db.Model):
-    """Bảng người dùng (Admin / Developer) với mật khẩu băm bằng Argon2id."""
+    """Bảng người dùng (Admin / Developer) với mật khẩu băm bằng PBKDF2-HMAC-SHA256 (NIST SP 800-132)."""
 
     __tablename__ = "users"
 

@@ -137,7 +137,7 @@ def seed_initial_data(force_reset: bool = False) -> dict:
         User.query.delete()
         db.session.commit()
 
-    # 1. Tạo 2 tài khoản User mẫu (Mật khẩu băm bằng Argon2id)
+    # 1. Tạo 2 tài khoản User mẫu (Mật khẩu băm bằng PBKDF2-HMAC-SHA256)
     # DEMO ONLY – không dùng production
     admin_password = current_app.config.get("DEMO_ADMIN_PASSWORD")
     if not admin_password:

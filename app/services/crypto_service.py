@@ -7,34 +7,84 @@ from typing import Tuple
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, InvalidHashError, VerificationError
-from cryptography.fernet import Fernet, InvalidToken
-from flask import current_app
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from flask import current_app, has_app_context
 
-# Khởi tạo bộ băm mật khẩu chuẩn Argon2id (Chiến thắng cuộc thi Password Hashing Competition)
-ph = PasswordHasher(
-    time_cost=2,
-    memory_cost=32768,
-    parallelism=2,
-    hash_len=32,
-    salt_len=16,
-)
+# =============================================================================
+# BĂM MẬT KHẨU: PBKDF2-HMAC-SHA256
+#   - NIST SP 800-132 (12/2010): PBKDF2, salt >= 128 bit, số vòng lặp càng cao càng tốt.
+#   - NIST SP 800-63B-4 (08/2025) mục 3.1.1.2: mật khẩu SHALL được lưu ở dạng chống tấn công
+#     ngoại tuyến, có salt và băm bằng lược đồ băm mật khẩu phù hợp (PBKDF2 theo SP 800-132).
+#   - OWASP Password Storage Cheat Sheet: PBKDF2-HMAC-SHA256 tối thiểu 600.000 vòng.
+# Định dạng lưu: $pbkdf2-sha256$<số_vòng>$<salt_base64>$<hash_base64>
+# =============================================================================
+PBKDF2_SCHEME = "pbkdf2-sha256"
+PBKDF2_DEFAULT_ITERATIONS = 600_000
+PBKDF2_SALT_BYTES = 16   # 128 bit (SP 800-132 mục 5.1)
+PBKDF2_DKLEN = 32        # 256 bit đầu ra
+
+# Chỉ dùng để XÁC MINH các hash Argon2id cũ (tạo trước khi chuyển sang PBKDF2).
+# Khi người dùng đăng nhập thành công, hash cũ được băm lại bằng PBKDF2 (rehash-on-login).
+_legacy_argon2 = PasswordHasher()
 
 # Bộ nhớ đệm chống phát lại (Nonce cache) trong cửa sổ thời gian hiệu lực.
 # Lưu ý: In-memory chỉ đúng với 1 process; môi trường Production nên dùng Redis: SET NX EX 300.
 _SEEN_SIGNATURES: dict[tuple, float] = {}
 
 
+def _b64e(data: bytes) -> str:
+    return base64.b64encode(data).decode("ascii").rstrip("=")
+
+
+def _b64d(text: str) -> bytes:
+    return base64.b64decode(text + "=" * (-len(text) % 4))
+
+
+def _pbkdf2_iterations() -> int:
+    if has_app_context():
+        return int(current_app.config.get("PASSWORD_PBKDF2_ITERATIONS", PBKDF2_DEFAULT_ITERATIONS))
+    return PBKDF2_DEFAULT_ITERATIONS
+
+
 def hash_password(raw_password: str) -> str:
-    """Băm mật khẩu người dùng bằng thuật toán Argon2id."""
-    return ph.hash(raw_password)
+    """Băm mật khẩu bằng PBKDF2-HMAC-SHA256 (NIST SP 800-132) với salt ngẫu nhiên 128 bit."""
+    iterations = _pbkdf2_iterations()
+    salt = secrets.token_bytes(PBKDF2_SALT_BYTES)
+    dk = hashlib.pbkdf2_hmac("sha256", raw_password.encode("utf-8"), salt, iterations, PBKDF2_DKLEN)
+    return f"${PBKDF2_SCHEME}${iterations}${_b64e(salt)}${_b64e(dk)}"
 
 
 def verify_password(password_hash: str, raw_password: str) -> bool:
-    """Kiểm tra mật khẩu với mã băm Argon2id."""
-    try:
-        return ph.verify(password_hash, raw_password)
-    except (VerifyMismatchError, InvalidHashError, VerificationError):
+    """Kiểm tra mật khẩu (so sánh hằng thời gian). Hỗ trợ cả hash Argon2id cũ."""
+    if not password_hash:
         return False
+    if password_hash.startswith(f"${PBKDF2_SCHEME}$"):
+        try:
+            _, _, iter_s, salt_s, hash_s = password_hash.split("$")
+            iterations = int(iter_s)
+            salt, expected = _b64d(salt_s), _b64d(hash_s)
+        except (ValueError, TypeError):
+            return False
+        dk = hashlib.pbkdf2_hmac("sha256", raw_password.encode("utf-8"), salt, iterations, len(expected))
+        return hmac.compare_digest(dk, expected)
+    if password_hash.startswith("$argon2"):
+        try:
+            return _legacy_argon2.verify(password_hash, raw_password)
+        except (VerifyMismatchError, InvalidHashError, VerificationError):
+            return False
+    return False
+
+
+def password_needs_rehash(password_hash: str) -> bool:
+    """True nếu hash là Argon2 cũ hoặc PBKDF2 có số vòng thấp hơn cấu hình hiện tại."""
+    if not password_hash.startswith(f"${PBKDF2_SCHEME}$"):
+        return True
+    try:
+        return int(password_hash.split("$")[2]) < _pbkdf2_iterations()
+    except (IndexError, ValueError):
+        return True
 
 
 def _get_pepper() -> bytes:
@@ -59,12 +109,25 @@ def verify_api_key_hash(raw_key: str, stored_hash: str) -> bool:
     return hmac.compare_digest(computed_hash, stored_hash)
 
 
-def _get_fernet() -> Fernet:
-    raw_master = current_app.config["MASTER_ENCRYPTION_KEY"]
-    # Đảm bảo khóa chuẩn 32-byte urlsafe-base64 cho Fernet (AES-128-CBC + HMAC-SHA256)
-    digest = hashlib.sha256(raw_master.encode("utf-8")).digest()
-    fernet_key = base64.urlsafe_b64encode(digest)
-    return Fernet(fernet_key)
+def _get_fernet() -> MultiFernet:
+    """
+    Dẫn xuất khóa Fernet 256 bit từ MASTER_ENCRYPTION_KEY bằng HKDF-SHA256
+    (RFC 5869; là KDF dạng "extract-then-expand" của NIST SP 800-56C Rev.2, 08/2020).
+    MultiFernet: luôn MÃ HÓA bằng khóa HKDF mới; vẫn GIẢI MÃ được dữ liệu cũ
+    được mã hóa bằng khóa dẫn xuất kiểu SHA-256 trần (phiên bản trước).
+    """
+    master = current_app.config["MASTER_ENCRYPTION_KEY"].encode("utf-8")
+    hkdf_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=b"SEC-GATEWAY/HKDF-salt/v1",
+        info=b"SEC-GATEWAY/fernet-data-encryption/v1",
+    ).derive(master)
+    legacy_key = hashlib.sha256(master).digest()
+    return MultiFernet([
+        Fernet(base64.urlsafe_b64encode(hkdf_key)),
+        Fernet(base64.urlsafe_b64encode(legacy_key)),
+    ])
 
 
 def encrypt_sensitive_value(plaintext: str) -> str:
